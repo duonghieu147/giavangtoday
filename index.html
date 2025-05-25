@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xem Giá Vàng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #f8fafc, #e2e8f0);
+        }
+        .chart-container {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .time-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .time-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        table tr {
+            transition: background-color 0.2s ease;
+        }
+        table tr:hover {
+            background-color: #f1f5f9;
+        }
+        .table-container {
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-6 max-w-6xl">
+        <h1 class="text-4xl font-bold text-gray-800 text-center mb-10">Biểu Đồ Giá Vàng</h1>
+
+        <!-- Nút chọn khoảng thời gian -->
+        <div class="flex justify-center mb-8 space-x-4 flex-wrap gap-4">
+            <button onclick="updateChart('1W')" class="time-btn px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-amber-700">1 Tuần</button>
+            <button onclick="updateChart('1M')" class="time-btn px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-amber-700">1 Tháng</button>
+            <button onclick="updateChart('3M')" class="time-btn px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-amber-700">3 Tháng</button>
+        </div>
+
+        <!-- Biểu đồ -->
+        <div class="chart-container">
+            <canvas id="goldPriceChart"></canvas>
+        </div>
+
+        <!-- Bảng dữ liệu -->
+        <div class="table-container bg-white p-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Dữ Liệu Giá Vàng</h2>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600">
+                        <th class="p-4 font-semibold rounded-tl-lg">Ngày</th>
+                        <th class="p-4 font-semibold">Vàng 24K (USD/oz)</th>
+                        <th class="p-4 font-semibold">Vàng 18K (USD/oz)</th>
+                        <th class="p-4 font-semibold rounded-tr-lg">Vàng SJC (USD/oz)</th>
+                    </tr>
+                </thead>
+                <tbody id="goldPriceTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Mock data giá vàng
+        const mockGoldData = {
+            '1W': [
+                { date: '2025-05-19', price24K: 2430.5, price18K: 1822.9, priceSJC: 2450.0 },
+                { date: '2025-05-20', price24K: 2435.2, price18K: 1826.4, priceSJC: 2455.0 },
+                { date: '2025-05-21', price24K: 2428.7, price18K: 1821.5, priceSJC: 2448.0 },
+                { date: '2025-05-22', price24K: 2440.1, price18K: 1830.1, priceSJC: 2460.5 },
+                { date: '2025-05-23', price24K: 2432.9, price18K: 1824.7, priceSJC: 2453.2 },
+                { date: '2025-05-24', price24K: 2438.4, price18K: 1828.8, priceSJC: 2458.9 },
+                { date: '2025-05-25', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.8 }
+            ],
+            '1M': [
+                { date: '2025-04-26', price24K: 2410.0, price18K: 1807.5, priceSJC: 2430.0 },
+                { date: '2025-04-28', price24K: 2412.5, price18K: 1809.4, priceSJC: 2432.5 },
+                { date: '2025-04-30', price24K: 2415.5, price18K: 1811.6, priceSJC: 2435.5 },
+                { date: '2025-05-02', price24K: 2418.0, price18K: 1813.5, priceSJC: 2438.0 },
+                { date: '2025-05-05', price24K: 2420.3, price18K: 1815.2, priceSJC: 2440.3 },
+                { date: '2025-05-08', price24K: 2423.7, price18K: 1817.8, priceSJC: 2443.7 },
+                { date: '2025-05-11', price24K: 2427.2, price18K: 1820.4, priceSJC: 2447.2 },
+                { date: '2025-05-14', price24K: 2429.8, price18K: 1822.4, priceSJC: 2449.8 },
+                { date: '2025-05-17', price24K: 2432.0, price18K: 1824.0, priceSJC: 2452.0 },
+                { date: '2025-05-20', price24K: 2435.2, price18K: 1826.4, priceSJC: 2455.2 },
+                { date: '2025-05-23', price24K: 2438.9, price18K: 1829.2, priceSJC: 2458.9 },
+                { date: '2025-05-25', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.3 }
+            ],
+            '3M': [
+                { date: '2025-02-25', price24K: 2390.0, price18K: 1792.5, priceSJC: 2410.0 },
+                { date: '2025-03-01', price24K: 2395.0, price18K: 1796.3, priceSJC: 2415.0 },
+                { date: '2025-03-08', price24K: 2398.5, price18K: 1798.9, priceSJC: 2418.5 },
+                { date: '2025-03-15', price24K: 2402.0, price18K: 1801.5, priceSJC: 2422.0 },
+                { date: '2025-03-22', price24K: 2405.7, price18K: 1804.3, priceSJC: 2425.7 },
+                { date: '2025-03-29', price24K: 2410.0, price18K: 1807.5, priceSJC: 2430.0 },
+                { date: '2025-04-05', price24K: 2415.0, price18K: 1811.3, priceSJC: 2435.0 },
+                { date: '2025-04-12', price24K: 2418.5, price18K: 1813.9, priceSJC: 2438.5 },
+                { date: '2025-04-19', price24K: 2422.0, price18K: 1816.5, priceSJC: 2442.0 },
+                { date: '2025-04-26', price24K: 2425.7, price18K: 1819.3, priceSJC: 2445.7 },
+                { date: '2025-05-03', price24K: 2429.0, price18K: 1821.8, priceSJC: 2449.0 },
+                { date: '2025-05-10', price24K: 2432.5, price18K: 1824.4, priceSJC: 2452.5 },
+                { date: '2025-05-17', price24K: 2435.7, price18K: 1826.8, priceSJC: 2455.7 },
+                { date: '2025-05-24', price24K: 2438.9, price18K: 1829.2, priceSJC: 2458.9 },
+                { date: '2025-05-25', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.3 }
+            ]
+        };
+
+        // Hàm định dạng giá với dấu phân cách hàng nghìn
+        function formatPrice(price) {
+            return price.toFixed(1).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        // Khởi tạo biểu đồ
+        const ctx = document.getElementById('goldPriceChart').getContext('2d');
+        let goldPriceChart;
+
+        // Hàm tạo gradient màu
+        function createGradient(ctx, colorStart, colorEnd) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, colorStart);
+            gradient.addColorStop(1, colorEnd);
+            return gradient;
+        }
+
+        // Khởi tạo biểu đồ
+        function initChart() {
+            goldPriceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Vàng 24K',
+                            data: [],
+                            borderColor: function(context) {
+                                return createGradient(context.chart.ctx, '#f1c40f', '#f7e1a1');
+                            },
+                            pointBackgroundColor: '#f1c40f',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Vàng 18K',
+                            data: [],
+                            borderColor: function(context) {
+                                return createGradient(context.chart.ctx, '#2ecc71', '#a8e4c3');
+                            },
+                            pointBackgroundColor: '#2ecc71',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Vàng SJC',
+                            data: [],
+                            borderColor: function(context) {
+                                return createGradient(context.chart.ctx, '#9b59b6', '#d7bde2');
+                            },
+                            pointBackgroundColor: '#9b59b6',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    animation: {
+                        duration: 1200,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Giá (USD/oz)',
+                                font: { size: 14, weight: '600' }
+                            },
+                            grid: {
+                                color: '#e2e8f0',
+                                lineWidth: 1
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatPrice(value);
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày',
+                                font: { size: 14, weight: '600' }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: { size: 12, weight: '600' },
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            titleFont: { size: 14, weight: '600' },
+                            bodyFont: { size: 12 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatPrice(context.raw)} USD/oz`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // Hàm cập nhật biểu đồ và bảng
+        function updateChart(period) {
+            const data = mockGoldData[period];
+            const labels = data.map(item => item.date);
+            const prices24K = data.map(item => item.price24K);
+            goldPriceChart.data.labels = labels;
+            goldPriceChart.data.datasets[0].data = prices24K;
+            goldPriceChart.data.datasets[1].data = data.map(item => item.price18K);
+            goldPriceChart.data.datasets[2].data = data.map(item => item.priceSJC);
+            goldPriceChart.update();
+
+            // Cập nhật bảng
+            const tableBody = document.getElementById('goldPriceTable');
+            tableBody.innerHTML = '';
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="p-4 border-b border-gray-200">${item.date}</td>
+                    <td class="p-4 border-b border-gray-200">${formatPrice(item.price24K)}</td>
+                    <td class="p-4 border-b border-gray-200">${formatPrice(item.price18K)}</td>
+                    <td class="p-4 border-b border-gray-200">${formatPrice(item.priceSJC)}</td>`;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Khởi tạo biểu đồ và hiển thị dữ liệu 1 tuần
+        initChart();
+        updateChart('1W');
+    </script>
+</body>
+</html>
