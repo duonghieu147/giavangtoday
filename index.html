@@ -11,21 +11,25 @@
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(180deg, #f8fafc, #e2e8f0);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .chart-container {
             background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-            padding: 24px;
-            margin-bottom: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 16px;
+            margin-bottom: 16px;
         }
         .time-btn {
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
         .time-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
         }
         table tr {
             transition: background-color 0.2s ease;
@@ -34,87 +38,146 @@
             background-color: #f1f5f9;
         }
         .table-container {
-            border-radius: 16px;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+        footer {
+            background: rgba(0, 0, 0, 0.03);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 640px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 1.25rem;
+            }
+            .time-btn {
+                padding: 8px 12px;
+                font-size: 0.8125rem;
+            }
+            .chart-container {
+                padding: 12px;
+            }
+            table th, table td {
+                padding: 8px 10px;
+                font-size: 0.8125rem;
+            }
+        }
+        
+        /* Tablet-specific styles */
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .container {
+                padding: 18px;
+            }
+            .time-btn {
+                padding: 10px 16px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container mx-auto p-6 max-w-6xl">
-        <h1 class="text-4xl font-bold text-gray-800 text-center mb-10">Biểu Đồ Giá Vàng</h1>
-
-        <!-- Nút chọn khoảng thời gian -->
-        <div class="flex justify-center mb-8 space-x-4 flex-wrap gap-4">
-            <button onclick="updateChart('1W')" class="time-btn px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-amber-700">1 Tuần</button>
-            <button onclick="updateChart('1M')" class="time-btn px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-amber-700">1 Tháng</button>
-            <button onclick="updateChart('3M')" class="time-btn px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-amber-700">3 Tháng</button>
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-bold text-amber-600">Giá Vàng Hôm Nay</h1>
+                <div class="text-sm text-gray-500">Cập nhật: <span id="update-time"></span></div>
+            </div>
         </div>
+    </header>
 
-        <!-- Biểu đồ -->
-        <div class="chart-container">
-            <canvas id="goldPriceChart"></canvas>
-        </div>
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <!-- Nút chọn khoảng thời gian -->
+            <div class="flex justify-center mb-6 md:mb-8 flex-wrap gap-2 md:gap-3">
+                <button onclick="updateChart('1W')" class="time-btn px-3 md:px-4 py-1.5 md:py-2 bg-white text-amber-600 rounded-lg font-medium hover:bg-amber-50 text-xs md:text-sm border-amber-200">1 Tuần</button>
+                <button onclick="updateChart('1M')" class="time-btn px-3 md:px-4 py-1.5 md:py-2 bg-white text-amber-600 rounded-lg font-medium hover:bg-amber-50 text-xs md:text-sm border-amber-200">1 Tháng</button>
+                <button onclick="updateChart('3M')" class="time-btn px-3 md:px-4 py-1.5 md:py-2 bg-white text-amber-600 rounded-lg font-medium hover:bg-amber-50 text-xs md:text-sm border-amber-200">3 Tháng</button>
+            </div>
 
-        <!-- Bảng dữ liệu -->
-        <div class="table-container bg-white p-6">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Dữ Liệu Giá Vàng</h2>
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-100 text-gray-600">
-                        <th class="p-4 font-semibold rounded-tl-lg">Ngày</th>
-                        <th class="p-4 font-semibold">Vàng 24K (USD/oz)</th>
-                        <th class="p-4 font-semibold">Vàng 18K (USD/oz)</th>
-                        <th class="p-4 font-semibold rounded-tr-lg">Vàng SJC (USD/oz)</th>
-                    </tr>
-                </thead>
-                <tbody id="goldPriceTable"></tbody>
-            </table>
+            <!-- Biểu đồ -->
+            <div class="chart-container">
+                <canvas id="goldPriceChart"></canvas>
+            </div>
+
+            <!-- Bảng dữ liệu -->
+            <div class="table-container bg-white p-4 md:p-6">
+                <h2 class="text-lg md:text-xl font-semibold text-gray-700 mb-3 md:mb-4">Dữ Liệu Giá Vàng</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-center border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600">
+                                <th class="p-3 md:p-4 font-medium md:font-semibold text-xs md:text-sm">Ngày</th>
+                                <th class="p-3 md:p-4 font-medium md:font-semibold text-xs md:text-sm">Vàng 24K (USD/oz)</th>
+                                <th class="p-3 md:p-4 font-medium md:font-semibold text-xs md:text-sm">Vàng 18K (USD/oz)</th>
+                                <th class="p-3 md:p-4 font-medium md:font-semibold text-xs md:text-sm">Vàng SJC (USD/oz)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goldPriceTable"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-4">
+        <div class="container mx-auto px-4">
+            <div class="text-center text-xs md:text-sm text-gray-500">
+                <p>Dữ liệu được cập nhật hàng ngày | © 2025 Giá Vàng Việt Nam</p>
+                <p class="mt-1">Thông tin chỉ mang tính chất tham khảo</p>
+            </div>
+        </div>
+    </footer>
 
     <script>
         // Mock data giá vàng
         const mockGoldData = {
             '1W': [
-                { date: '2025-05-19', price24K: 2430.5, price18K: 1822.9, priceSJC: 2450.0 },
-                { date: '2025-05-20', price24K: 2435.2, price18K: 1826.4, priceSJC: 2455.0 },
-                { date: '2025-05-21', price24K: 2428.7, price18K: 1821.5, priceSJC: 2448.0 },
-                { date: '2025-05-22', price24K: 2440.1, price18K: 1830.1, priceSJC: 2460.5 },
-                { date: '2025-05-23', price24K: 2432.9, price18K: 1824.7, priceSJC: 2453.2 },
-                { date: '2025-05-24', price24K: 2438.4, price18K: 1828.8, priceSJC: 2458.9 },
-                { date: '2025-05-25', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.8 }
+                { date: '19/05', price24K: 2430.5, price18K: 1822.9, priceSJC: 2450.0 },
+                { date: '20/05', price24K: 2435.2, price18K: 1826.4, priceSJC: 2455.0 },
+                { date: '21/05', price24K: 2428.7, price18K: 1821.5, priceSJC: 2448.0 },
+                { date: '22/05', price24K: 2440.1, price18K: 1830.1, priceSJC: 2460.5 },
+                { date: '23/05', price24K: 2432.9, price18K: 1824.7, priceSJC: 2453.2 },
+                { date: '24/05', price24K: 2438.4, price18K: 1828.8, priceSJC: 2458.9 },
+                { date: '25/05', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.8 }
             ],
             '1M': [
-                { date: '2025-04-26', price24K: 2410.0, price18K: 1807.5, priceSJC: 2430.0 },
-                { date: '2025-04-28', price24K: 2412.5, price18K: 1809.4, priceSJC: 2432.5 },
-                { date: '2025-04-30', price24K: 2415.5, price18K: 1811.6, priceSJC: 2435.5 },
-                { date: '2025-05-02', price24K: 2418.0, price18K: 1813.5, priceSJC: 2438.0 },
-                { date: '2025-05-05', price24K: 2420.3, price18K: 1815.2, priceSJC: 2440.3 },
-                { date: '2025-05-08', price24K: 2423.7, price18K: 1817.8, priceSJC: 2443.7 },
-                { date: '2025-05-11', price24K: 2427.2, price18K: 1820.4, priceSJC: 2447.2 },
-                { date: '2025-05-14', price24K: 2429.8, price18K: 1822.4, priceSJC: 2449.8 },
-                { date: '2025-05-17', price24K: 2432.0, price18K: 1824.0, priceSJC: 2452.0 },
-                { date: '2025-05-20', price24K: 2435.2, price18K: 1826.4, priceSJC: 2455.2 },
-                { date: '2025-05-23', price24K: 2438.9, price18K: 1829.2, priceSJC: 2458.9 },
-                { date: '2025-05-25', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.3 }
+                { date: '26/04', price24K: 2410.0, price18K: 1807.5, priceSJC: 2430.0 },
+                { date: '28/04', price24K: 2412.5, price18K: 1809.4, priceSJC: 2432.5 },
+                { date: '30/04', price24K: 2415.5, price18K: 1811.6, priceSJC: 2435.5 },
+                { date: '02/05', price24K: 2418.0, price18K: 1813.5, priceSJC: 2438.0 },
+                { date: '05/05', price24K: 2420.3, price18K: 1815.2, priceSJC: 2440.3 },
+                { date: '08/05', price24K: 2423.7, price18K: 1817.8, priceSJC: 2443.7 },
+                { date: '11/05', price24K: 2427.2, price18K: 1820.4, priceSJC: 2447.2 },
+                { date: '14/05', price24K: 2429.8, price18K: 1822.4, priceSJC: 2449.8 },
+                { date: '17/05', price24K: 2432.0, price18K: 1824.0, priceSJC: 2452.0 },
+                { date: '20/05', price24K: 2435.2, price18K: 1826.4, priceSJC: 2455.2 },
+                { date: '23/05', price24K: 2438.9, price18K: 1829.2, priceSJC: 2458.9 },
+                { date: '25/05', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.3 }
             ],
             '3M': [
-                { date: '2025-02-25', price24K: 2390.0, price18K: 1792.5, priceSJC: 2410.0 },
-                { date: '2025-03-01', price24K: 2395.0, price18K: 1796.3, priceSJC: 2415.0 },
-                { date: '2025-03-08', price24K: 2398.5, price18K: 1798.9, priceSJC: 2418.5 },
-                { date: '2025-03-15', price24K: 2402.0, price18K: 1801.5, priceSJC: 2422.0 },
-                { date: '2025-03-22', price24K: 2405.7, price18K: 1804.3, priceSJC: 2425.7 },
-                { date: '2025-03-29', price24K: 2410.0, price18K: 1807.5, priceSJC: 2430.0 },
-                { date: '2025-04-05', price24K: 2415.0, price18K: 1811.3, priceSJC: 2435.0 },
-                { date: '2025-04-12', price24K: 2418.5, price18K: 1813.9, priceSJC: 2438.5 },
-                { date: '2025-04-19', price24K: 2422.0, price18K: 1816.5, priceSJC: 2442.0 },
-                { date: '2025-04-26', price24K: 2425.7, price18K: 1819.3, priceSJC: 2445.7 },
-                { date: '2025-05-03', price24K: 2429.0, price18K: 1821.8, priceSJC: 2449.0 },
-                { date: '2025-05-10', price24K: 2432.5, price18K: 1824.4, priceSJC: 2452.5 },
-                { date: '2025-05-17', price24K: 2435.7, price18K: 1826.8, priceSJC: 2455.7 },
-                { date: '2025-05-24', price24K: 2438.9, price18K: 1829.2, priceSJC: 2458.9 },
-                { date: '2025-05-25', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.3 }
+                { date: '25/02', price24K: 2390.0, price18K: 1792.5, priceSJC: 2410.0 },
+                { date: '01/03', price24K: 2395.0, price18K: 1796.3, priceSJC: 2415.0 },
+                { date: '08/03', price24K: 2398.5, price18K: 1798.9, priceSJC: 2418.5 },
+                { date: '15/03', price24K: 2402.0, price18K: 1801.5, priceSJC: 2422.0 },
+                { date: '22/03', price24K: 2405.7, price18K: 1804.3, priceSJC: 2425.7 },
+                { date: '29/03', price24K: 2410.0, price18K: 1807.5, priceSJC: 2430.0 },
+                { date: '05/04', price24K: 2415.0, price18K: 1811.3, priceSJC: 2435.0 },
+                { date: '12/04', price24K: 2418.5, price18K: 1813.9, priceSJC: 2438.5 },
+                { date: '19/04', price24K: 2422.0, price18K: 1816.5, priceSJC: 2442.0 },
+                { date: '26/04', price24K: 2425.7, price18K: 1819.3, priceSJC: 2445.7 },
+                { date: '03/05', price24K: 2429.0, price18K: 1821.8, priceSJC: 2449.0 },
+                { date: '10/05', price24K: 2432.5, price18K: 1824.4, priceSJC: 2452.5 },
+                { date: '17/05', price24K: 2435.7, price18K: 1826.8, priceSJC: 2455.7 },
+                { date: '24/05', price24K: 2438.9, price18K: 1829.2, priceSJC: 2458.9 },
+                { date: '25/05', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.3 }
             ]
         };
 
@@ -151,10 +214,11 @@
                             pointBackgroundColor: '#f1c40f',
                             pointBorderColor: '#fff',
                             pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                             tension: 0.4,
-                            fill: false
+                            fill: false,
+                            borderWidth: 3
                         },
                         {
                             label: 'Vàng 18K',
@@ -165,10 +229,11 @@
                             pointBackgroundColor: '#2ecc71',
                             pointBorderColor: '#fff',
                             pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                             tension: 0.4,
-                            fill: false
+                            fill: false,
+                            borderWidth: 3
                         },
                         {
                             label: 'Vàng SJC',
@@ -179,16 +244,20 @@
                             pointBackgroundColor: '#9b59b6',
                             pointBorderColor: '#fff',
                             pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                             tension: 0.4,
-                            fill: false
+                            fill: false,
+                            borderWidth: 3
                         }
                     ]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: window.innerWidth < 768 ? 1.2 : 2,
                     animation: {
-                        duration: 1200,
+                        duration: 1000,
                         easing: 'easeOutQuart'
                     },
                     scales: {
@@ -197,7 +266,7 @@
                             title: {
                                 display: true,
                                 text: 'Giá (USD/oz)',
-                                font: { size: 14, weight: '600' }
+                                font: { size: 12, weight: '600' }
                             },
                             grid: {
                                 color: '#e2e8f0',
@@ -206,6 +275,9 @@
                             ticks: {
                                 callback: function(value) {
                                     return formatPrice(value);
+                                },
+                                font: {
+                                    size: 10
                                 }
                             }
                         },
@@ -213,10 +285,15 @@
                             title: {
                                 display: true,
                                 text: 'Ngày',
-                                font: { size: 14, weight: '600' }
+                                font: { size: 12, weight: '600' }
                             },
                             grid: {
                                 display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
                             }
                         }
                     },
@@ -226,16 +303,17 @@
                             position: 'top',
                             labels: {
                                 font: { size: 12, weight: '600' },
-                                padding: 20,
-                                usePointStyle: true
+                                padding: 10,
+                                usePointStyle: true,
+                                boxWidth: 8
                             }
                         },
                         tooltip: {
                             backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                            titleFont: { size: 14, weight: '600' },
-                            bodyFont: { size: 12 },
-                            padding: 12,
-                            cornerRadius: 8,
+                            titleFont: { size: 12, weight: '600' },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            cornerRadius: 6,
                             callbacks: {
                                 label: function(context) {
                                     return `${context.dataset.label}: ${formatPrice(context.raw)} USD/oz`;
@@ -268,17 +346,29 @@
             data.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="p-4 border-b border-gray-200">${item.date}</td>
-                    <td class="p-4 border-b border-gray-200">${formatPrice(item.price24K)}</td>
-                    <td class="p-4 border-b border-gray-200">${formatPrice(item.price18K)}</td>
-                    <td class="p-4 border-b border-gray-200">${formatPrice(item.priceSJC)}</td>`;
+                    <td class="p-3 md:p-4 border-b border-gray-200 text-xs md:text-sm">${item.date}</td>
+                    <td class="p-3 md:p-4 border-b border-gray-200 text-xs md:text-sm">${formatPrice(item.price24K)}</td>
+                    <td class="p-3 md:p-4 border-b border-gray-200 text-xs md:text-sm">${formatPrice(item.price18K)}</td>
+                    <td class="p-3 md:p-4 border-b border-gray-200 text-xs md:text-sm">${formatPrice(item.priceSJC)}</td>`;
                 tableBody.appendChild(row);
             });
+            
+            // Cập nhật thời gian
+            const now = new Date();
+            document.getElementById('update-time').textContent = now.toLocaleString('vi-VN');
         }
 
         // Khởi tạo biểu đồ và hiển thị dữ liệu 1 tuần
         initChart();
         updateChart('1W');
+        
+        // Xử lý responsive cho biểu đồ khi thay đổi kích thước màn hình
+        window.addEventListener('resize', function() {
+            if (goldPriceChart) {
+                goldPriceChart.options.aspectRatio = window.innerWidth < 768 ? 1.2 : 2;
+                goldPriceChart.resize();
+            }
+        });
     </script>
 </body>
 </html>

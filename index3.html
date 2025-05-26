@@ -1,0 +1,61 @@
+<html> <head> <meta name="robots" content="noindex, nofollow"/> </head></html><div id="div_bieu_do_ty_gia_container">
+    <header class="cate-24h-gold-pri-chart__t d-flex align-items-center justify-content-between">
+        <h2 class="title">Biểu đồ tỷ giá 30 ngày gần nhất</h2>
+        <p class="text-uppercase name-gold">
+                        EURO        </p>
+    </header>
+    <div class="cate-24h-gold-pri-chart">
+        <!--@@LOAD_HEADER_JQUERY_CODE@@-->
+        <script  src="/includes/highcharts/js/highcharts.js?v=20250513000"></script>
+        <script  src="/includes/highcharts/js/modules/exporting.js?v=20250513000"></script>
+                <script type="text/javascript">
+            $(function () {
+                $('#div_bieu_do_ty_gia').highcharts({
+                    chart: {
+                        type: 'line'
+                    },
+                    title: {
+                        text: ''
+                    },
+                    subtitle: {
+                        text: ''
+                    },
+                    xAxis: {
+                        categories: ['25/04','26/04','27/04','28/04','29/04','30/04','01/05','02/05','03/05','04/05','05/05','06/05','07/05','08/05','09/05','10/05','11/05','12/05','13/05','14/05','15/05','16/05','17/05','18/05','19/05','20/05','21/05','22/05','23/05','24/05','25/05'],
+						labels: {
+							maxStaggerLines: 1,
+							step: 5,
+						}
+                    },
+                    yAxis: {
+                        title: {
+                            text: ''
+                        }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        formatter: function() {
+                            return '<b>'+ this.series.name +'</b>: '+(this.y).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') + '<br>' + '<b>Ngày: </b>' + (this.x);
+                        }
+                    },
+                    series: [
+                                        {
+                        name: 'Mua vào',
+                        color: '#f13628',
+                        data: [28801.35,28801.09,28801.09,28748.54,28797.25,28797.25,28797.25,28797.25,28797.25,28797.25,28626.79,28693.50,28719.43,28678.32,28454.79,28454.79,28454.79,28100.65,28098.12,28412.63,28293.02,28298.07,28298.07,28298.07,28473.29,28434.55,28576.20,28670.73,28603.12,28603.12,28603.12]
+                    }, 
+                                            {
+                            name: 'Bán ra',
+                            color:'#258a29',
+                            data: [30379.39,30402.51,30402.51,30323.77,30445.31,30445.31,30445.31,30445.31,30445.31,30445.31,30195.41,30265.75,30293.14,30249.74,30013.97,30013.97,30013.97,29640.43,29637.77,29969.54,29843.40,29848.73,29848.73,29848.73,30033.53,29992.63,30142.05,30241.73,30170.45,30170.45,30170.45]
+                        }
+                                        ]
+                });
+            });
+            </script>
+        <div class="clear"></div>
+        <div>
+                        <div id="div_bieu_do_ty_gia" style="min-width: 310px; height: 370px; margin: 0 auto"></div>
+                    </div>
+    </div>
+</div>
