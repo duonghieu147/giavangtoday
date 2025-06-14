@@ -57,16 +57,15 @@ func SendGoldPriceNotification(goldData *GoldPriceResponse) error {
 	// Load configuration
 	config, err := loadConfig("bot/config.json")
 	if err != nil {
-		fmt.Printf("Error loading config: %v\n", err)
+		return fmt.Errorf("failed to load config: %w", err)
 	}
+
 	// Format the message
 	message := formatGoldPriceMessage(goldData)
 
 	// Send to Telegram
-	err = sendTelegramMessage(config.TelegramBotToken, config.TelegramChatID, message)
-	if err != nil {
-		fmt.Printf("Error sending Telegram message: %v\n", err)
-		return err
+	if err := sendTelegramMessage(config.TelegramBotToken, config.TelegramChatID, message); err != nil {
+		return fmt.Errorf("failed to send telegram message: %w", err)
 	}
 
 	fmt.Println("Gold price notification sent successfully!")
