@@ -3,680 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phân Tích & Biểu Đồ Biến Động Bạc Phú Quý</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Xem Giá Vàng</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <!-- CanvasJS CDN for Charting -->
-    <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7f9fb;
+            background: linear-gradient(180deg, #f8fafc, #e2e8f0);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        .card {
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease;
+        .chart-container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 16px;
+            margin-bottom: 16px;
         }
-        .animate-pulse-slow {
-            animation: pulse-slow 3s infinite;
+        .time-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .time-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
         }
-        /* Custom style for active time range button */
-        .time-range-active {
-            @apply bg-indigo-600 text-white shadow-lg;
+        table tr {
+            transition: background-color 0.2s ease;
         }
-        /* Custom Toggle Switch for Proxy */
-        #proxy-toggle:checked ~ .block {
-            background-color: #4f46e5; /* indigo-600 */
+        table tr:hover {
+            background-color: #f1f5f9;
         }
-        #proxy-toggle:checked ~ .dot {
-            transform: translateX(100%);
+        .table-container {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+        footer {
+            background: rgba(0, 0, 0, 0.03);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 640px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 1.25rem;
+            }
+            .time-btn {
+                padding: 8px 12px;
+                font-size: 0.8125rem;
+            }
+            .chart-container {
+                padding: 12px;
+            }
+            table th, table td {
+                padding: 8px 10px;
+                font-size: 0.8125rem;
+            }
+        }
+        
+        /* Tablet-specific styles */
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .container {
+                padding: 18px;
+            }
+            .time-btn {
+                padding: 10px 16px;
+            }
         }
     </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen flex items-start justify-center">
-
-    <div class="w-full max-w-5xl">
-        <header class="text-center mb-6 md:mb-8">
-            <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
-                Phân Tích & Biểu Đồ Biến Động Bạc Phú Quý
-            </h1>
-            <p class="text-sm text-gray-500 mt-1">Dữ liệu cache 3 năm | Mobile Ready</p>
-        </header>
-
-        <main class="card bg-white rounded-xl p-4 md:p-10">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-3 sm:space-y-0">
-                <!-- Cache Status -->
-                <div id="cache-status" class="text-xs font-medium px-3 py-1 rounded-full text-white">
-                    Đang khởi tạo...
-                </div>
-                
-                <!-- Proxy Toggle -->
-                <label for="proxy-toggle" class="flex items-center cursor-pointer">
-                    <span class="mr-3 text-sm font-medium text-gray-700">Sử dụng CORS Proxy</span>
-                    <div class="relative">
-                        <input type="checkbox" id="proxy-toggle" class="sr-only" checked>
-                        <div class="block bg-gray-300 w-10 h-6 rounded-full"></div>
-                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
-                    </div>
-                </label>
+<body>
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-bold text-amber-600">Giá Vàng Hôm Nay</h1>
+                <div class="text-sm text-gray-500">Cập nhật: <span id="update-time"></span></div>
             </div>
-            
-            <!-- Time Range Selection -->
-            <div class="flex flex-wrap gap-2 md:gap-3 mb-6 md:mb-8 justify-center" id="time-range-controls">
-                <button data-days="2" class="time-range-btn px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs sm:text-sm bg-gray-100 text-gray-700 transition hover:bg-indigo-100 time-range-active">Hôm Qua- Hôm Nay</button>
-                <button data-days="7" class="time-range-btn px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs sm:text-sm bg-gray-100 text-gray-700 transition hover:bg-indigo-100">7 Ngày</button>
-                <button data-days="30" class="time-range-btn px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs sm:text-sm bg-gray-100 text-gray-700 transition hover:bg-indigo-100">1 Tháng</button>
-                <button data-days="90" class="time-range-btn px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs sm:text-sm bg-gray-100 text-gray-700 transition hover:bg-indigo-100">3 Tháng</button>
-                <button data-days="365" class="time-range-btn px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs sm:text-sm bg-gray-100 text-gray-700 transition hover:bg-indigo-100">1 Năm</button>
-                <button data-days="730" class="time-range-btn px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs sm:text-sm bg-gray-100 text-gray-700 transition hover:bg-indigo-100">2 Năm</button>
-                <button data-days="1095" class="time-range-btn px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs sm:text-sm bg-gray-100 text-gray-700 transition hover:bg-indigo-100">3 Năm</button>
-                
-                <div class="flex items-center space-x-1 sm:space-x-2 w-full sm:w-auto mt-2 sm:mt-0">
-                    <input type="number" id="custom-days-input" min="2" max="1095" value="14" class="w-16 sm:w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ngày">
-                    <button id="custom-days-btn" class="flex-shrink-0 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs sm:text-sm bg-gray-100 text-gray-700 transition hover:bg-indigo-100">Tùy Chỉnh</button>
-                </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <!-- Nút chọn khoảng thời gian -->
+            <div class="flex justify-center mb-6 md:mb-8 flex-wrap gap-2 md:gap-3">
+                <button onclick="updateChart('1W')" class="time-btn px-3 md:px-4 py-1.5 md:py-2 bg-white text-amber-600 rounded-lg font-medium hover:bg-amber-50 text-xs md:text-sm border-amber-200">1 Tuần</button>
+                <button onclick="updateChart('1M')" class="time-btn px-3 md:px-4 py-1.5 md:py-2 bg-white text-amber-600 rounded-lg font-medium hover:bg-amber-50 text-xs md:text-sm border-amber-200">1 Tháng</button>
+                <button onclick="updateChart('3M')" class="time-btn px-3 md:px-4 py-1.5 md:py-2 bg-white text-amber-600 rounded-lg font-medium hover:bg-amber-50 text-xs md:text-sm border-amber-200">3 Tháng</button>
             </div>
 
-            <div id="loading-state" class="text-center py-10">
-                <div class="animate-pulse-slow text-indigo-500 font-medium">
-                    <svg class="animate-spin h-6 w-6 mr-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Đang tải dữ liệu (Ưu tiên Cache 3 Năm)...
-                </div>
+            <!-- Biểu đồ -->
+            <div class="chart-container">
+                <canvas id="goldPriceChart"></canvas>
             </div>
 
-            <div id="error-state" class="hidden text-center bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg">
-                <p class="font-bold mb-2">Lỗi Tải Dữ Liệu</p>
-                <p id="error-message"></p>
-                <p class="mt-4 text-sm">Vui lòng kiểm tra lại kết nối hoặc URL của API. Đã cố gắng sử dụng dữ liệu Cache.</p>
-            </div>
-
-            <div id="results-container" class="hidden">
-                
-                <!-- Chart Container -->
-                <div id="chartContainer" class="mb-8" style="height: 350px; width: 100%;"></div>
-
-                <h2 class="text-xl md:text-2xl font-bold text-gray-700 mb-4 border-b pb-3">Phân Tích Giai Đoạn</h2>
-                <p class="text-sm text-gray-500 mb-4 italic">Sử dụng chuột/cảm ứng để bôi đen (zoom) hoặc kéo thả (pan) trên biểu đồ để xem chi tiết.</p>
-                
-                <!-- Summary Card for Percentage Change -->
-                <div id="percentage-summary" class="p-4 md:p-6 rounded-xl text-white mb-6 transition duration-500">
-                    <p class="text-xs md:text-sm font-light opacity-90">Tỷ lệ biến động giá bán (<span id="period-text">7 Ngày</span>)</p>
-                    <p id="change-percent" class="text-4xl md:text-5xl font-extrabold mt-1"></p>
-                </div>
-
-                <!-- Detailed Data - Responsive Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 text-gray-800">
-                    <div class="bg-indigo-50 p-3 md:p-4 rounded-lg">
-                        <p class="text-xs font-semibold uppercase text-indigo-600">Bạc Phú Quý (Bắt Đầu)</p>
-                        <p id="oldest-date" class="text-sm text-gray-500 mt-1"></p>
-                        <p id="oldest-price" class="text-lg md:text-xl font-bold mt-2"></p>
-                    </div>
-                    <div class="bg-indigo-50 p-3 md:p-4 rounded-lg">
-                        <p class="text-xs font-semibold uppercase text-indigo-600">Bạc Phú Quý (Kết Thúc)</p>
-                        <p id="latest-date" class="text-sm text-gray-500 mt-1"></p>
-                        <p id="latest-price" class="text-lg md:text-xl font-bold mt-2"></p>
-                    </div>
-                    <div class="bg-indigo-50 p-3 md:p-4 rounded-lg">
-                        <p class="text-xs font-semibold uppercase text-indigo-600">Chênh Lệch Tuyệt Đối</p>
-                        <p class="text-sm text-gray-500 mt-1">Giá bán cuối - Giá bán đầu</p>
-                        <p id="difference-amount" class="text-lg md:text-xl font-bold mt-2"></p>
-                    </div>
-                </div>
-
-                <!-- Raw Data Table -->
-                <h3 class="text-lg md:text-xl font-bold text-gray-700 mt-8 md:mt-10 mb-4">Dữ Liệu Giá Bán Chi Tiết (Mới nhất)</h3>
+            <!-- Bảng dữ liệu -->
+            <div class="table-container bg-white p-4 md:p-6">
+                <h2 class="text-lg md:text-xl font-semibold text-gray-700 mb-3 md:mb-4">Dữ Liệu Giá Vàng</h2>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời Gian</th>
-                                <th class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá Mua (VND/Lượng)</th>
-                                <th class="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá Bán (VND/Lượng)</th>
+                    <table class="w-full text-center border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600">
+                                <th class="p-3 md:p-4 font-medium md:font-semibold text-xs md:text-sm">Ngày</th>
+                                <th class="p-3 md:p-4 font-medium md:font-semibold text-xs md:text-sm">Vàng 24K (USD/oz)</th>
+                                <th class="p-3 md:p-4 font-medium md:font-semibold text-xs md:text-sm">Vàng 18K (USD/oz)</th>
+                                <th class="p-3 md:p-4 font-medium md:font-semibold text-xs md:text-sm">Vàng SJC (USD/oz)</th>
                             </tr>
                         </thead>
-                        <tbody id="data-table-body" class="bg-white divide-y divide-gray-200 text-sm">
-                            <!-- Dữ liệu sẽ được điền vào đây bằng JS -->
-                        </tbody>
+                        <tbody id="goldPriceTable"></tbody>
                     </table>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
-    <!-- Firebase Imports -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        // --- GLOBAL FIREBASE/APP VARS ---
-        setLogLevel('Debug');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        let firebaseApp, db, auth;
-        let isAuthReady = false;
+    <!-- Footer -->
+    <footer class="py-4">
+        <div class="container mx-auto px-4">
+            <div class="text-center text-xs md:text-sm text-gray-500">
+                <p>Dữ liệu được cập nhật hàng ngày | © 2025 Giá Vàng Việt Nam</p>
+                <p class="mt-1">Thông tin chỉ mang tính chất tham khảo</p>
+            </div>
+        </div>
+    </footer>
 
-        // Export setup function to global scope
-        window.setupFirebaseAndStartApp = async function() {
-            // Destructure Firebase functions here for use in the main script
-            window.getDoc = getDoc;
-            window.doc = doc;
-            window.setDoc = setDoc;
-            
-            try {
-                firebaseApp = initializeApp(firebaseConfig);
-                db = getFirestore(firebaseApp);
-                auth = getAuth(firebaseApp);
-
-                // Authenticate
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                
-                // Get User ID for data path
-                window.CURRENT_USER_ID = auth.currentUser?.uid || 'anonymous';
-                window.DB_INSTANCE = db;
-                
-                isAuthReady = true;
-                
-                // Start the main app logic after successful initialization
-                window.fetchAndAnalyzeGoldPrice(window.currentDays);
-
-            } catch (error) {
-                console.error("FIREBASE/AUTH ERROR:", error);
-                document.getElementById('cache-status').textContent = 'Lỗi Khởi Tạo Firebase';
-                document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-red-600 text-white';
-                // Fallback: Try to run app without cache (API only)
-                window.fetchAndAnalyzeGoldPrice(window.currentDays);
-            }
-        };
-    </script>
-    
-    <!-- Main Application Script -->
     <script>
-        // --- Cấu hình API và Tham số Mặc Định ---
-        const BASE_API_URL = 'https://giabac.vn/SilverInfo/GetGoldPriceChartFromSQLData';
-        const CORS_PROXY = 'https://api.allorigins.win/get?url=';
-        const DAYS_FOR_CACHE = 1095; // 3 NĂM
-        const CACHE_COLLECTION = `/artifacts/${typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'}/public/data/gold_price_cache`;
-        const CACHE_DOC_ID = 'historical_data';
-        
-        // Global variables (Attached to window for module scope access)
-        window.currentDays = 7; 
-        window.USE_CORS_PROXY = document.getElementById('proxy-toggle').checked;
-        window.ALL_CACHED_DATA = []; // Biến toàn cục 3 năm data (JSON)
-
-        // --- Hàm Tiện Ích ---
-
-        function formatVND(amount) {
-            return parseFloat(amount).toLocaleString('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            });
-        }
-
-        function parseAndFormatDate(dateString, format = 'display') {
-            const date = new Date(dateString);
-            if (format === 'display') {
-                return date.toLocaleDateString('vi-VN', { 
-                    day: '2-digit', 
-                    month: '2-digit', 
-                    year: 'numeric' 
-                });
-            }
-            if (format === 'YYYY-MM-DD') {
-                return date.toISOString().split('T')[0];
-            }
-            return date; // Trả về đối tượng Date
-        }
-        
-        function compareByDateTime(a, b) {
-            return new Date(a.DateTime) - new Date(b.DateTime);
-        }
-
-        // --- XỬ LÝ CACHE (FIREBASE) ---
-        
-        async function getCache() {
-            if (!window.DB_INSTANCE) return null;
-            try {
-                const docRef = window.doc(window.DB_INSTANCE, CACHE_COLLECTION, CACHE_DOC_ID);
-                const docSnap = await window.getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    const today = parseAndFormatDate(new Date(), 'YYYY-MM-DD');
-                    
-                    document.getElementById('cache-status').textContent = `Cache: ${data.fetch_date} (${data.data.length} điểm)`;
-                    
-                    if (data.fetch_date === today) {
-                        document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-green-600 text-white';
-                        return data.data; // Cache tươi mới
-                    } else {
-                        document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-yellow-500 text-gray-800';
-                        return data.data; // Cache cũ, vẫn dùng được
-                    }
-                }
-            } catch (error) {
-                console.error("Lỗi đọc cache Firestore:", error);
-                document.getElementById('cache-status').textContent = 'Lỗi đọc Cache';
-                document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-red-600 text-white';
-                return null;
-            }
-            document.getElementById('cache-status').textContent = 'Chưa có Cache';
-            document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-gray-500 text-white';
-            return null; // Không có cache
-        }
-        
-        async function setCache(data) {
-            if (!window.DB_INSTANCE) return;
-            try {
-                const docRef = window.doc(window.DB_INSTANCE, CACHE_COLLECTION, CACHE_DOC_ID);
-                
-                const today = parseAndFormatDate(new Date(), 'YYYY-MM-DD');
-
-                await window.setDoc(docRef, {
-                    fetch_date: today,
-                    data: data 
-                });
-                
-                document.getElementById('cache-status').textContent = `Cache: ${today} (${data.length} điểm) - Đã cập nhật`;
-                document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-green-600 text-white';
-
-            } catch (error) {
-                console.error("Lỗi ghi cache Firestore:", error);
-            }
-        }
-
-        // --- HÀM FETCH DỮ LIỆU TỪ API ---
-
-        async function fetchAPI(days) {
-            const TARGET_API_URL = `${BASE_API_URL}?days=${days}`;
-            
-            let API_URL = TARGET_API_URL;
-            let processProxyResponse = false;
-
-            if (window.USE_CORS_PROXY) {
-                API_URL = CORS_PROXY + encodeURIComponent(TARGET_API_URL);
-                processProxyResponse = true;
-            }
-
-            const HEADERS = { 'Accept': 'application/json, text/plain, */*' };
-
-            for (let i = 0; i < 5; i++) {
-                try {
-                    const response = await fetch(API_URL, { headers: HEADERS });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    if (processProxyResponse) {
-                        const proxyResponse = await response.json();
-                        if (proxyResponse.contents) {
-                            return JSON.parse(proxyResponse.contents);
-                        } else {
-                            throw new Error("Cấu trúc phản hồi từ CORS Proxy không mong muốn.");
-                        }
-                    } else {
-                        return await response.json();
-                    }
-
-                } catch (error) {
-                    // Do not log retries as errors in the console
-                    if (i === 4) {
-                        throw new Error(`Tải dữ liệu thất bại sau nhiều lần thử lại. Chi tiết lỗi: ${error.message}`);
-                    }
-                    const delay = Math.pow(2, i) * 1000;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
-        }
-        
-        // --- XỬ LÝ BIỂU ĐỒ VÀ PHÂN TÍCH ---
-        
-        function updateSummaryForRange(minDateTimestamp, maxDateTimestamp, initialPeriodText = null) {
-            const minDate = new Date(minDateTimestamp);
-            const maxDate = new Date(maxDateTimestamp);
-
-            const filteredData = window.ALL_CACHED_DATA.filter(item => {
-                const itemDate = parseAndFormatDate(item.DateTime, 'object');
-                return itemDate >= minDate && itemDate <= maxDate;
-            });
-            
-            if (filteredData.length < 2) {
-                document.getElementById('change-percent').textContent = "Không đủ DL";
-                document.getElementById('percentage-summary').className = `p-4 md:p-6 rounded-xl text-white mb-6 transition duration-500 bg-gray-500`;
-                document.getElementById('period-text').textContent = "Phạm vi Zoom";
-                document.getElementById('oldest-date').textContent = '-';
-                document.getElementById('oldest-price').textContent = '-';
-                document.getElementById('latest-date').textContent = '-';
-                document.getElementById('latest-price').textContent = '-';
-                document.getElementById('difference-amount').textContent = '-';
-                return;
-            }
-
-            const oldestRecord = filteredData[0];
-            const latestRecord = filteredData[filteredData.length - 1];
-
-            const oldestPrice = oldestRecord.PriceSell;
-            const latestPrice = latestRecord.PriceSell;
-
-            const priceDifference = latestPrice - oldestPrice;
-            const percentageChange = (priceDifference / oldestPrice) * 100;
-
-            const isIncrease = percentageChange >= 0;
-            const sign = isIncrease ? '+' : '';
-            const colorClass = isIncrease ? 'bg-green-600' : 'bg-red-600';
-            const differenceText = `${isIncrease ? 'Tăng' : 'Giảm'} ${formatVND(Math.abs(priceDifference))}`;
-
-            const startDateText = parseAndFormatDate(oldestRecord.DateTime);
-            const endDateText = parseAndFormatDate(latestRecord.DateTime);
-            
-            document.getElementById('period-text').textContent = initialPeriodText || `${startDateText} - ${endDateText}`;
-            
-            const summaryEl = document.getElementById('percentage-summary');
-            summaryEl.className = `p-4 md:p-6 rounded-xl text-white mb-6 transition duration-500 ${colorClass}`;
-            document.getElementById('change-percent').textContent = `${sign}${percentageChange.toFixed(2)}%`;
-            
-            document.getElementById('oldest-date').textContent = startDateText;
-            document.getElementById('oldest-price').textContent = formatVND(oldestPrice);
-            
-            document.getElementById('latest-date').textContent = endDateText;
-            document.getElementById('latest-price').textContent = formatVND(latestPrice);
-            
-            document.getElementById('difference-amount').textContent = differenceText;
-        }
-
-        function updateDataTable(data) {
-            const tableBody = document.getElementById('data-table-body');
-            tableBody.innerHTML = ''; 
-            
-            // Chỉ hiển thị 50 dòng mới nhất để tránh lag trên mobile
-            const displayData = [...data].reverse().slice(0, 50);
-
-            displayData.forEach(item => {
-                const row = tableBody.insertRow();
-                row.className = 'hover:bg-gray-50';
-                
-                row.insertCell().textContent = parseAndFormatDate(item.DateTime);
-                row.insertCell().textContent = formatVND(item.PriceBuy);
-                row.insertCell().textContent = formatVND(item.PriceSell);
-            });
-        }
-        
-        // Custom Tooltip Formatter
-        function customTooltipFormatter(e) {
-            let content = `<strong>${e.entries[0].dataPoint.x.toLocaleDateString('vi-VN')}</strong><hr style="margin: 4px 0;">`;
-            
-            e.entries.forEach(entry => {
-                const color = entry.dataSeries.color;
-                const name = entry.dataSeries.name;
-                const price = formatVND(entry.dataPoint.y);
-                
-                content += `<span style="color: ${color};">•</span> ${name}: <strong>${price}</strong><br>`;
-            });
-            
-            return content;
-        }
-
-        function renderChart(combinedData, days) {
-            const buyPoints = [];
-            const sellPoints = [];
-
-            combinedData.forEach(item => {
-                const date = parseAndFormatDate(item.DateTime, 'object');
-                buyPoints.push({ x: date, y: item.PriceBuy });
-                sellPoints.push({ x: date, y: item.PriceSell });
-            });
-            
-            const chart = new CanvasJS.Chart("chartContainer", {
-                animationEnabled: true,
-                theme: "light2",
-                zoomEnabled: true, 
-                panEnabled: true, 
-                title:{
-                    text: `Biến Động Bạc Phú Quý 999 (${days} Ngày)`,
-                    fontSize: 16, 
-                    fontFamily: "Inter"
-                },
-                axisX:{
-                    valueFormatString: "DD MMM YYYY",
-                    labelFontFamily: "Inter",
-                    labelFontSize: 10
-                },
-                axisY: {
-                    title: "Giá VND/Lượng",
-                    prefix: "VND ",
-                    includeZero: false,
-                    labelFormatter: function (e) {
-                        if (e.value >= 1000000) {
-                            return (e.value / 1000000).toFixed(0) + " Tr";
-                        }
-                        return formatVND(e.value);
-                    },
-                    labelFontFamily: "Inter",
-                    labelFontSize: 10
-                },
-                // --- CẤU HÌNH TOOLTIP MỚI ---
-                toolTip: {
-                    shared: true, // Chia sẻ tooltip cho các series
-                    contentFormatter: customTooltipFormatter // Sử dụng hàm tùy chỉnh
-                },
-                // -----------------------------
-                rangeChanged: function(e) {
-                    const minDate = e.axisX[0].viewportMinimum;
-                    const maxDate = e.axisX[0].viewportMaximum;
-                    updateSummaryForRange(minDate, maxDate);
-                },
-                data: [
-                    {
-                        type: "line",
-                        name: "Giá Mua Vào",
-                        showInLegend: true,
-                        markerType: "none", 
-                        color: "#1d4ed8",
-                        yValueFormatString: "VND #,##0",
-                        dataPoints: buyPoints
-                    },
-                    {
-                        type: "line",
-                        name: "Giá Bán Ra",
-                        showInLegend: true,
-                        markerType: "none", 
-                        color: "#059669",
-                        yValueFormatString: "VND #,##0",
-                        dataPoints: sellPoints
-                    }
-                ]
-            });
-
-            chart.render();
-        }
-
-        // --- Hàm Xử Lý Chính (Sử dụng Cache) ---
-
-        window.fetchAndAnalyzeGoldPrice = async function(daysToDisplay) {
-            window.currentDays = daysToDisplay; 
-            
-            const loadingState = document.getElementById('loading-state');
-            const errorState = document.getElementById('error-state');
-            const resultsContainer = document.getElementById('results-container');
-            const errorMessage = document.getElementById('error-message');
-
-            loadingState.classList.remove('hidden');
-            errorState.classList.add('hidden');
-            resultsContainer.classList.add('hidden');
-            document.getElementById('chartContainer').innerHTML = '';
-
-            try {
-                let fullData;
-                let isCacheFresh = false;
-
-                // 1. THỬ ĐỌC CACHE 3 NĂM
-                if (window.DB_INSTANCE) {
-                    const cachedData = await getCache();
-                    if (cachedData && cachedData.length > 0) {
-                        fullData = cachedData;
-                        const today = parseAndFormatDate(new Date(), 'YYYY-MM-DD');
-                        const cacheDateText = document.getElementById('cache-status').textContent.split(' ')[1];
-                        // Đảm bảo cacheDateText có định dạng YYYY-MM-DD để so sánh
-                        let cacheDate;
-                        try {
-                           cacheDate = parseAndFormatDate(cacheDateText, 'YYYY-MM-DD');
-                        } catch {
-                           cacheDate = null;
-                        }
-                        
-                        if (cacheDate === today) {
-                            isCacheFresh = true;
-                        }
-                        console.log("Sử dụng dữ liệu từ Cache Firestore.");
-                    }
-                }
-
-                // 2. NẾU KHÔNG CÓ CACHE TƯƠI MỚI -> GỌI API 3 NĂM
-                if (!isCacheFresh) {
-                    try {
-                        console.log(`Cache cũ hoặc trống. Gọi API ${DAYS_FOR_CACHE} ngày...`);
-                        loadingState.querySelector('div').innerHTML = `<svg class="animate-spin h-6 w-6 mr-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Đang tải và cập nhật Cache ${DAYS_FOR_CACHE} ngày từ API...`;
-                        
-                        const rawData = await fetchAPI(DAYS_FOR_CACHE);
-                        
-                        if (!rawData || rawData.Dates.length < 2) {
-                            throw new Error("API trả về dữ liệu không hợp lệ.");
-                        }
-
-                        // Chuyển đổi và sắp xếp
-                        const combinedData = [];
-                        for (let i = 0; i < rawData.Dates.length; i++) {
-                            combinedData.push({
-                                DateTime: rawData.Dates[i], 
-                                PriceBuy: parseFloat(rawData.LastBuyPrices[i]),
-                                PriceSell: parseFloat(rawData.LastSellPrices[i])
-                            });
-                        }
-                        fullData = combinedData.sort(compareByDateTime);
-                        
-                        // Ghi Cache mới vào Firestore 
-                        await setCache(fullData);
-
-                    } catch (apiError) {
-                        console.error('Lỗi API. Thử dùng lại dữ liệu Cache cũ nhất.', apiError);
-                        if (fullData) {
-                            // Nếu có cache cũ (từ bước 1), tiếp tục dùng, nhưng thông báo lỗi API
-                            document.getElementById('cache-status').textContent += ' (API Lỗi, Dùng Cache Cũ)';
-                        } else {
-                            // Hoàn toàn không có dữ liệu
-                            throw new Error(`API lỗi và không có dữ liệu Cache dự phòng nào. Chi tiết lỗi: ${apiError.message}`);
-                        }
-                    }
-                }
-
-                // 3. XỬ LÝ DỮ LIỆU ĐÃ CÓ (TỪ CACHE HOẶC API MỚI)
-                window.ALL_CACHED_DATA = fullData; // Lưu 3 năm data vào global
-
-                // Lọc dữ liệu theo số ngày yêu cầu (daysToDisplay)
-                const endDate = new Date(fullData[fullData.length - 1].DateTime);
-                const startDate = new Date(endDate);
-                startDate.setDate(endDate.getDate() - (daysToDisplay - 1));
-
-                const dataToDisplay = fullData.filter(item => {
-                    const itemDate = parseAndFormatDate(item.DateTime, 'object');
-                    return itemDate >= startDate;
-                });
-                
-                if (dataToDisplay.length === 0) {
-                     throw new Error(`Không tìm thấy dữ liệu trong ${daysToDisplay} ngày gần nhất từ Cache 3 Năm.`);
-                }
-
-                // 4. HIỂN THỊ KẾT QUẢ
-                resultsContainer.classList.remove('hidden');
-                updateDataTable(fullData); // Bảng hiển thị 50 dòng mới nhất từ data 3 năm
-                renderChart(dataToDisplay, daysToDisplay);
-
-                // Cập nhật tóm tắt ban đầu (toàn bộ range hiển thị)
-                const oldestDateTimestamp = parseAndFormatDate(dataToDisplay[0].DateTime, 'object').getTime();
-                const latestDateTimestamp = parseAndFormatDate(dataToDisplay[dataToDisplay.length - 1].DateTime, 'object').getTime();
-                
-                updateSummaryForRange(oldestDateTimestamp, latestDateTimestamp, `${daysToDisplay} Ngày`); 
-
-            } catch (error) {
-                console.error('Lỗi Phân Tích Tổng Thể: ', error);
-                errorMessage.textContent = error.message; 
-                errorState.classList.remove('hidden');
-            } finally {
-                loadingState.classList.add('hidden');
-            }
-        }
-        
-        // --- Xử lý sự kiện ---
-        function setupEventListeners() {
-            const rangeButtons = document.querySelectorAll('.time-range-btn');
-            const customDaysBtn = document.getElementById('custom-days-btn');
-            const customDaysInput = document.getElementById('custom-days-input');
-            const proxyToggle = document.getElementById('proxy-toggle');
-
-            rangeButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    document.querySelectorAll('.time-range-btn').forEach(btn => btn.classList.remove('time-range-active'));
-                    customDaysBtn.classList.remove('time-range-active');
-                    e.currentTarget.classList.add('time-range-active');
-
-                    const days = parseInt(e.currentTarget.dataset.days);
-                    window.fetchAndAnalyzeGoldPrice(days);
-                });
-            });
-
-            customDaysBtn.addEventListener('click', () => {
-                const days = parseInt(customDaysInput.value);
-                if (days > 1 && days <= 1095) {
-                    document.querySelectorAll('.time-range-btn').forEach(btn => btn.classList.remove('time-range-active'));
-                    customDaysBtn.classList.add('time-range-active');
-                    
-                    window.fetchAndAnalyzeGoldPrice(days);
-                } else {
-                    console.error('Vui lòng nhập số ngày hợp lệ (tối thiểu 2, tối đa 1095 - 3 năm)');
-                }
-            });
-
-            proxyToggle.addEventListener('change', () => {
-                window.USE_CORS_PROXY = proxyToggle.checked;
-                // Khi thay đổi Proxy, thử fetch lại
-                window.fetchAndAnalyzeGoldPrice(window.currentDays);
-            });
-            
-            // Khởi chạy với mốc 7 Ngày mặc định
-            window.fetchAndAnalyzeGoldPrice(window.currentDays);
-        }
-
-        // --- Khởi chạy Ứng dụng ---
-        window.onload = () => {
-            setupEventListeners();
-            if (typeof window.setupFirebaseAndStartApp === 'function') {
-                // Bắt đầu khởi tạo Firebase/Auth
-                window.setupFirebaseAndStartApp();
-            } else {
-                 console.error("Firebase setup function not found. Running with limited functionality.");
-                 window.DB_INSTANCE = null;
-                 // Nếu không có Firebase (cache), chỉ chạy API
-                 window.fetchAndAnalyzeGoldPrice(window.currentDays);
-            }
+        // Mock data giá vàng
+        const mockGoldData = {
+            '1W': [
+                { date: '19/05', price24K: 2430.5, price18K: 1822.9, priceSJC: 2450.0 },
+                { date: '20/05', price24K: 2435.2, price18K: 1826.4, priceSJC: 2455.0 },
+                { date: '21/05', price24K: 2428.7, price18K: 1821.5, priceSJC: 2448.0 },
+                { date: '22/05', price24K: 2440.1, price18K: 1830.1, priceSJC: 2460.5 },
+                { date: '23/05', price24K: 2432.9, price18K: 1824.7, priceSJC: 2453.2 },
+                { date: '24/05', price24K: 2438.4, price18K: 1828.8, priceSJC: 2458.9 },
+                { date: '25/05', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.8 }
+            ],
+            '1M': [
+                { date: '26/04', price24K: 2410.0, price18K: 1807.5, priceSJC: 2430.0 },
+                { date: '28/04', price24K: 2412.5, price18K: 1809.4, priceSJC: 2432.5 },
+                { date: '30/04', price24K: 2415.5, price18K: 1811.6, priceSJC: 2435.5 },
+                { date: '02/05', price24K: 2418.0, price18K: 1813.5, priceSJC: 2438.0 },
+                { date: '05/05', price24K: 2420.3, price18K: 1815.2, priceSJC: 2440.3 },
+                { date: '08/05', price24K: 2423.7, price18K: 1817.8, priceSJC: 2443.7 },
+                { date: '11/05', price24K: 2427.2, price18K: 1820.4, priceSJC: 2447.2 },
+                { date: '14/05', price24K: 2429.8, price18K: 1822.4, priceSJC: 2449.8 },
+                { date: '17/05', price24K: 2432.0, price18K: 1824.0, priceSJC: 2452.0 },
+                { date: '20/05', price24K: 2435.2, price18K: 1826.4, priceSJC: 2455.2 },
+                { date: '23/05', price24K: 2438.9, price18K: 1829.2, priceSJC: 2458.9 },
+                { date: '25/05', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.3 }
+            ],
+            '3M': [
+                { date: '25/02', price24K: 2390.0, price18K: 1792.5, priceSJC: 2410.0 },
+                { date: '01/03', price24K: 2395.0, price18K: 1796.3, priceSJC: 2415.0 },
+                { date: '08/03', price24K: 2398.5, price18K: 1798.9, priceSJC: 2418.5 },
+                { date: '15/03', price24K: 2402.0, price18K: 1801.5, priceSJC: 2422.0 },
+                { date: '22/03', price24K: 2405.7, price18K: 1804.3, priceSJC: 2425.7 },
+                { date: '29/03', price24K: 2410.0, price18K: 1807.5, priceSJC: 2430.0 },
+                { date: '05/04', price24K: 2415.0, price18K: 1811.3, priceSJC: 2435.0 },
+                { date: '12/04', price24K: 2418.5, price18K: 1813.9, priceSJC: 2438.5 },
+                { date: '19/04', price24K: 2422.0, price18K: 1816.5, priceSJC: 2442.0 },
+                { date: '26/04', price24K: 2425.7, price18K: 1819.3, priceSJC: 2445.7 },
+                { date: '03/05', price24K: 2429.0, price18K: 1821.8, priceSJC: 2449.0 },
+                { date: '10/05', price24K: 2432.5, price18K: 1824.4, priceSJC: 2452.5 },
+                { date: '17/05', price24K: 2435.7, price18K: 1826.8, priceSJC: 2455.7 },
+                { date: '24/05', price24K: 2438.9, price18K: 1829.2, priceSJC: 2458.9 },
+                { date: '25/05', price24K: 2442.3, price18K: 1831.7, priceSJC: 2462.3 }
+            ]
         };
+
+        // Hàm định dạng giá với dấu phân cách hàng nghìn
+        function formatPrice(price) {
+            return price.toFixed(1).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        // Khởi tạo biểu đồ
+        const ctx = document.getElementById('goldPriceChart').getContext('2d');
+        let goldPriceChart;
+
+        // Hàm tạo gradient màu
+        function createGradient(ctx, colorStart, colorEnd) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, colorStart);
+            gradient.addColorStop(1, colorEnd);
+            return gradient;
+        }
+
+        // Khởi tạo biểu đồ
+        function initChart() {
+            goldPriceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Vàng 24K',
+                            data: [],
+                            borderColor: function(context) {
+                                return createGradient(context.chart.ctx, '#f1c40f', '#f7e1a1');
+                            },
+                            pointBackgroundColor: '#f1c40f',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.4,
+                            fill: false,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Vàng 18K',
+                            data: [],
+                            borderColor: function(context) {
+                                return createGradient(context.chart.ctx, '#2ecc71', '#a8e4c3');
+                            },
+                            pointBackgroundColor: '#2ecc71',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.4,
+                            fill: false,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Vàng SJC',
+                            data: [],
+                            borderColor: function(context) {
+                                return createGradient(context.chart.ctx, '#9b59b6', '#d7bde2');
+                            },
+                            pointBackgroundColor: '#9b59b6',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.4,
+                            fill: false,
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: window.innerWidth < 768 ? 1.2 : 2,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Giá (USD/oz)',
+                                font: { size: 12, weight: '600' }
+                            },
+                            grid: {
+                                color: '#e2e8f0',
+                                lineWidth: 1
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatPrice(value);
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày',
+                                font: { size: 12, weight: '600' }
+                            },
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: { size: 12, weight: '600' },
+                                padding: 10,
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            titleFont: { size: 12, weight: '600' },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            cornerRadius: 6,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatPrice(context.raw)} USD/oz`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // Hàm cập nhật biểu đồ và bảng
+        function updateChart(period) {
+            const data = mockGoldData[period];
+            const labels = data.map(item => item.date);
+            const prices24K = data.map(item => item.price24K);
+            goldPriceChart.data.labels = labels;
+            goldPriceChart.data.datasets[0].data = prices24K;
+            goldPriceChart.data.datasets[1].data = data.map(item => item.price18K);
+            goldPriceChart.data.datasets[2].data = data.map(item => item.priceSJC);
+            goldPriceChart.update();
+
+            // Cập nhật bảng
+            const tableBody = document.getElementById('goldPriceTable');
+            tableBody.innerHTML = '';
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="p-3 md:p-4 border-b border-gray-200 text-xs md:text-sm">${item.date}</td>
+                    <td class="p-3 md:p-4 border-b border-gray-200 text-xs md:text-sm">${formatPrice(item.price24K)}</td>
+                    <td class="p-3 md:p-4 border-b border-gray-200 text-xs md:text-sm">${formatPrice(item.price18K)}</td>
+                    <td class="p-3 md:p-4 border-b border-gray-200 text-xs md:text-sm">${formatPrice(item.priceSJC)}</td>`;
+                tableBody.appendChild(row);
+            });
+            
+            // Cập nhật thời gian
+            const now = new Date();
+            document.getElementById('update-time').textContent = now.toLocaleString('vi-VN');
+        }
+
+        // Khởi tạo biểu đồ và hiển thị dữ liệu 1 tuần
+        initChart();
+        updateChart('1W');
+        
+        // Xử lý responsive cho biểu đồ khi thay đổi kích thước màn hình
+        window.addEventListener('resize', function() {
+            if (goldPriceChart) {
+                goldPriceChart.options.aspectRatio = window.innerWidth < 768 ? 1.2 : 2;
+                goldPriceChart.resize();
+            }
+        });
     </script>
 </body>
 </html>

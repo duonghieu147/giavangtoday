@@ -3,248 +3,839 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIÁ VÀNG</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Phân Tích & Biểu Đồ Biến Động Giá Vàng</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CanvasJS CDN for Charting -->
+    <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
     <style>
+        /* Font Monospace (theo yêu cầu) */
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 15px;
-            color: #333;
-            line-height: 1.5;
-            max-width: 1000px;
-            margin: 0 auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            transition: background-color 0.3s, color 0.3s;
         }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-            color: #000;
-            font-weight: bold;
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 8px;
+
+        /* LIGHT MODE DEFAULTS */
+        body {
+            background-color: #f7f9fb; 
+            color: #1f2937;
         }
-        .nguon {
-            font-style: italic;
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 15px;
-            display: block;
+        .card {
+            background-color: #ffffff;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08); 
+            border-radius: 1rem; 
         }
-        h2 {
-            font-size: 18px;
-            margin: 20px 0 10px 0;
-            color: #000;
-            font-weight: bold;
+
+        /* DARK MODE OVERRIDES */
+        .dark body {
+            background-color: #171717; /* Gray 900 */
+            color: #e5e7eb; /* Gray 200 */
         }
-        .ngay {
-            font-weight: bold;
-            margin: 10px 0;
-            font-size: 14px;
+        .dark .card {
+            background-color: #262626; /* Gray 800 */
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+            border: 1px solid #3f3f46; /* Gray 600 */
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0 15px 0;
-            font-size: 14px;
+        .dark .text-gray-900 { color: #f3f4f6; }
+        .dark .text-gray-600 { color: #a1a1aa; }
+        .dark .border-gray-200 { border-color: #3f3f46; }
+        .dark .bg-gray-100 { background-color: #262626; }
+        .dark .bg-gray-50 { background-color: #1f2937; border-color: #374151; }
+        .dark .divide-gray-100 { border-color: #374151; }
+        .dark table .hover\:bg-gray-50:hover { background-color: #374151; }
+        
+        /* Input & Button Styling adjustments for 'snappy' feel */
+        .time-range-btn {
+            transition: background-color 0.15s, color 0.15s, transform 0.1s;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px 5px;
-            text-align: center;
+        .time-range-btn:active {
+            transform: scale(0.98);
         }
-        th {
-            background-color: #f5f5f5;
-            font-weight: bold;
+
+        /* Toggle Switch (Monochromatic) */
+        #proxy-toggle:checked ~ .block { background-color: #1f2937; }
+        .dark #proxy-toggle:checked ~ .block { background-color: #4b5563; }
+        
+        /* Dark Mode Toggle Switch (Visual style only) */
+        .dark-mode-toggle .block {
+            background-color: #94a3b8;
         }
-        .donvi {
-            font-size: 13px;
-            color: #666;
-            margin: 5px 0;
+        .dark .dark-mode-toggle .block {
+            background-color: #4b5563;
         }
-        .tanggiam {
-            font-size: 13px;
-            color: #666;
-            font-style: italic;
-            margin-bottom: 15px;
+        #dark-mode-toggle:checked ~ .block {
+            background-color: #2563eb; /* Blue for ON */
         }
-        hr {
-            border: 0;
-            height: 1px;
-            background-color: #e0e0e0;
-            margin: 20px 0;
-        }
-        .bieudo-title {
-            font-weight: bold;
-            margin: 15px 0 5px 0;
-            font-size: 14px;
-        }
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin: 15px 0;
+        #dark-mode-toggle:checked ~ .dot {
+            transform: translateX(100%);
         }
     </style>
+    <!-- Thêm meta tag để tối ưu chế độ Sáng/Tối -->
+    <meta name="color-scheme" content="light dark">
 </head>
-<body>
-    <h1>GIÁ VÀNG</h1>
-    <span class="nguon">Nguồn: giavang.net và pnj.com.vn - Cập nhật lúc 12:48 (25/05/2025)</span>
-    
-    <h2>Tìm mã vàng nhanh</h2>
-    <div class="ngay">2025-05-25</div>
-    
-    <table>
-        <tr>
-            <th rowspan="2"></th>
-            <th colspan="2">Hôm nay (25/05/2025)</th>
-            <th colspan="2">Hôm qua (24/05/2025)</th>
-        </tr>
-        <tr>
-            <th>Giá mua</th>
-            <th>Giá bán</th>
-            <th>Giá mua</th>
-            <th>Giá bán</th>
-        </tr>
-        <tr>
-            <td>SJC</td>
-            <td>119,000</td>
-            <td>121,000</td>
-            <td>119,000</td>
-            <td>121,000</td>
-        </tr>
-        <tr>
-            <td>DOJI HN</td>
-            <td>119,000</td>
-            <td>121,000</td>
-            <td>119,000</td>
-            <td>121,000</td>
-        </tr>
-        <tr>
-            <td>DOJI SG</td>
-            <td>119,000</td>
-            <td>121,000</td>
-            <td>119,000</td>
-            <td>121,000</td>
-        </tr>
-        <tr>
-            <td>BTMC SJC</td>
-            <td>119,000</td>
-            <td>121,000</td>
-            <td>119,000</td>
-            <td>121,000</td>
-        </tr>
-        <tr>
-            <td>PHÚ QUY SJC</td>
-            <td>118,000</td>
-            <td>121,000</td>
-            <td>118,000</td>
-            <td>121,000</td>
-        </tr>
-        <tr>
-            <td>PNJ TP.HCM</td>
-            <td>113,000</td>
-            <td>116,000</td>
-            <td>113,000</td>
-            <td>116,000</td>
-        </tr>
-        <tr>
-            <td>PNJ HÀ NỘI</td>
-            <td>113,000</td>
-            <td>116,000</td>
-            <td>113,000</td>
-            <td>116,000</td>
-        </tr>
-    </table>
-    
-    <div class="donvi">Đơn vị: nghìn đồng/lượng</div>
-    <div class="tanggiam">*Tăng giảm so sánh với ngày trước đó</div>
-    
-    <hr>
-    
-    <h2>Biểu đồ giá vàng 30 ngày gần nhất</h2>
-    <div class="bieudo-title">SJC</div>
-    
-    <div class="chart-container">
-        <canvas id="goldChart"></canvas>
+<body class="p-4 md:p-8 min-h-screen flex items-start justify-center">
+
+    <div class="w-full max-w-5xl">
+        <header class="text-center mb-6 md:mb-8">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tighter">
+                Phân Tích & Biểu Đồ Biến Động Giá Vàng
+            </h1>
+            <p class="text-sm text-gray-600 mt-1">Dữ liệu cache 3 năm | Thiết kế Monospace</p>
+        </header>
+
+        <main class="card rounded-xl p-4 md:p-10">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-3 sm:space-y-0">
+                <!-- Cache Status -->
+                <div id="cache-status" class="text-xs font-medium px-3 py-1 rounded-full text-white">
+                    Đang khởi tạo...
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Dark Mode Toggle -->
+                    <label for="dark-mode-toggle" class="flex items-center cursor-pointer dark-mode-toggle">
+                        <span class="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                             Chế độ Tối
+                        </span>
+                        <div class="relative">
+                            <input type="checkbox" id="dark-mode-toggle" class="sr-only">
+                            <div class="block w-10 h-6 rounded-full transition duration-300"></div>
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition duration-300"></div>
+                        </div>
+                    </label>
+
+                    <!-- Proxy Toggle (Monochromatic) -->
+                    <label for="proxy-toggle" class="flex items-center cursor-pointer">
+                        <span class="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">CORS Proxy</span>
+                        <div class="relative">
+                            <input type="checkbox" id="proxy-toggle" class="sr-only" checked>
+                            <div class="block bg-gray-300 w-10 h-6 rounded-full transition duration-200"></div>
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition duration-200"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Time Range Selection -->
+            <div class="flex flex-wrap gap-2 md:gap-3 mb-6 md:mb-8 justify-center" id="time-range-controls">
+                <button id="7-days-btn" data-days="7" class="time-range-btn"></button>
+                <button id="30-days-btn" data-days="30" class="time-range-btn"></button>
+                <button id="90-days-btn" data-days="90" class="time-range-btn"></button>
+                <button id="365-days-btn" data-days="365" class="time-range-btn"></button>
+                <button id="1095-days-btn" data-days="1095" class="time-range-btn"></button>
+                
+                <div class="flex items-center space-x-1 sm:space-x-2 w-full sm:w-auto mt-2 sm:mt-0">
+                    <input type="number" id="custom-days-input" min="2" max="1095" value="14" class="w-16 sm:w-20 px-3 py-1.5 border border-gray-400 dark:border-gray-500 dark:bg-gray-700 dark:text-white rounded-xl text-sm focus:ring-gray-700 focus:border-gray-700" placeholder="Ngày">
+                    <button id="custom-days-btn" class="time-range-btn flex-shrink-0"></button>
+                </div>
+            </div>
+
+            <div id="loading-state" class="text-center py-10">
+                <div class="animate-pulse-slow text-gray-700 dark:text-gray-300 font-medium">
+                    <svg class="animate-spin h-6 w-6 mr-3 inline-block text-gray-900 dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Đang tải dữ liệu (Ưu tiên Cache 3 Năm)...
+                </div>
+            </div>
+
+            <div id="error-state" class="hidden text-center bg-red-50 border border-red-300 text-red-700 p-6 rounded-xl dark:bg-red-900 dark:border-red-700 dark:text-red-300">
+                <p class="font-bold mb-2">Lỗi Tải Dữ Liệu</p>
+                <p id="error-message"></p>
+                <p class="mt-4 text-sm">Vui lòng kiểm tra lại kết nối hoặc URL của API. Đã cố gắng sử dụng dữ liệu Cache.</p>
+            </div>
+
+            <div id="results-container" class="hidden">
+                
+                <!-- Chart Container -->
+                <div id="chartContainer" class="mb-8" style="height: 350px; width: 100%;"></div>
+
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 border-b border-gray-200 dark:border-gray-600 pb-3">Phân Tích Giai Đoạn</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 italic">Sử dụng chuột/cảm ứng để bôi đen (zoom) hoặc kéo thả (pan) trên biểu đồ để xem chi tiết.</p>
+                
+                <!-- Summary Card for Percentage Change (Sử dụng Xanh/Đỏ) -->
+                <div id="percentage-summary" class="p-4 md:p-6 rounded-xl text-white mb-6 transition duration-500">
+                    <p class="text-xs md:text-sm font-light opacity-90">Tỷ lệ biến động giá bán (<span id="period-text">7 Ngày</span>)</p>
+                    <p id="change-percent" class="text-4xl md:text-5xl font-extrabold mt-1"></p>
+                </div>
+
+                <!-- Detailed Data - Responsive Grid (Sử dụng Monochromatic) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 text-gray-800 dark:text-gray-200">
+                    <div class="bg-gray-50 dark:bg-gray-800 p-3 md:p-4 rounded-xl border border-gray-200 dark:border-gray-600">
+                        <p class="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Giá Vàng (Bắt Đầu)</p>
+                        <p id="oldest-date" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                        <p id="oldest-price" class="text-lg md:text-xl font-bold mt-2"></p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-800 p-3 md:p-4 rounded-xl border border-gray-200 dark:border-gray-600">
+                        <p class="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Giá Vàng (Kết Thúc)</p>
+                        <p id="latest-date" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                        <p id="latest-price" class="text-lg md:text-xl font-bold mt-2"></p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-800 p-3 md:p-4 rounded-xl border border-gray-200 dark:border-gray-600">
+                        <p class="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Chênh Lệch Tuyệt Đối</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Giá bán cuối - Giá bán đầu</p>
+                        <p id="difference-amount" class="text-lg md:text-xl font-bold mt-2"></p>
+                    </div>
+                </div>
+
+                <!-- Raw Data Table -->
+                <h3 class="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 mt-8 md:mt-10 mb-4">Dữ Liệu Giá Bán Chi Tiết (Mới nhất)</h3>
+                <div class="overflow-x-auto border border-gray-200 dark:border-gray-600 rounded-xl">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                        <thead class="bg-gray-100 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-4 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider rounded-tl-xl">Thời Gian</th>
+                                <th class="px-4 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Giá Mua (VND/Lượng)</th>
+                                <th class="px-4 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider rounded-tr-xl">Giá Bán (VND/Lượng)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700 text-sm">
+                            <!-- Dữ liệu sẽ được điền vào đây bằng JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
-    
-    <div class="bieudo-title">Mua vào</div>
-    <div class="bieudo-title">Bán ra</div>
 
-    <script>
-        // Tạo dữ liệu ngẫu nhiên cho biểu đồ 30 ngày
-        function generateRandomData(baseValue, fluctuation) {
-            let data = [];
-            for (let i = 0; i < 30; i++) {
-                data.push(baseValue + Math.random() * fluctuation - fluctuation/2);
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // --- GLOBAL FIREBASE/APP VARS ---
+        setLogLevel('Debug');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let firebaseApp, db, auth;
+        let isAuthReady = false;
+
+        // Export setup function to global scope
+        window.setupFirebaseAndStartApp = async function() {
+            // Destructure Firebase functions here for use in the main script
+            window.getDoc = getDoc;
+            window.doc = doc;
+            window.setDoc = setDoc;
+            
+            try {
+                firebaseApp = initializeApp(firebaseConfig);
+                db = getFirestore(firebaseApp);
+                auth = getAuth(firebaseApp);
+
+                // Authenticate
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                // Get User ID for data path
+                window.CURRENT_USER_ID = auth.currentUser?.uid || 'anonymous';
+                window.DB_INSTANCE = db;
+                
+                isAuthReady = true;
+                
+                // Start the main app logic after successful initialization
+                window.fetchAndAnalyzeGoldPrice(window.currentDays);
+
+            } catch (error) {
+                console.error("FIREBASE/AUTH ERROR:", error);
+                
+                // Cập nhật trạng thái chi tiết hơn khi lỗi
+                const errorMessage = error.message.includes('API_KEY_INVALID') ? 'Lỗi Cấu Hình Firebase/API Key' : 'Lỗi Xác Thực/Khởi Tạo';
+                document.getElementById('cache-status').textContent = `Cache NG: ${errorMessage}`;
+                document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-red-600 text-white';
+                
+                // Đảm bảo cache bị vô hiệu hóa
+                window.DB_INSTANCE = null; 
+                
+                // Fallback: Try to run app without cache (API only)
+                window.fetchAndAnalyzeGoldPrice(window.currentDays);
             }
-            return data.map(value => Math.round(value / 1000) * 1000); // Làm tròn đến nghìn đồng
+        };
+    </script>
+    
+    <!-- Main Application Script -->
+    <script>
+        // --- Cấu hình API và Tham số Mặc Định ---
+        const BASE_API_URL = 'https://giabac.vn/SilverInfo/GetGoldPriceChartFromSQLData';
+        const CORS_PROXY = 'https://api.allorigins.win/get?url=';
+        const DAYS_FOR_CACHE = 1095; // 3 NĂM
+        const CACHE_COLLECTION = `/artifacts/${typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'}/public/data/gold_price_cache`;
+        const CACHE_DOC_ID = 'historical_data';
+        
+        // Global variables (Attached to window for module scope access)
+        window.currentDays = 7; 
+        window.USE_CORS_PROXY = document.getElementById('proxy-toggle').checked;
+        window.ALL_CACHED_DATA = []; 
+
+        // Class Definitions for Button State Management 
+        const ACTIVE_CLASSES = 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-md hover:bg-gray-800 dark:hover:bg-gray-200 transition duration-150 ease-in-out';
+        const INACTIVE_CLASSES = 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition duration-150 ease-in-out';
+        const ALL_BUTTON_IDS = ['7-days-btn', '30-days-btn', '90-days-btn', '365-days-btn', '1095-days-btn', 'custom-days-btn'];
+        const BASE_BUTTON_CLASSES = 'time-range-btn px-4 py-2 rounded-xl font-medium text-xs sm:text-sm shadow-sm';
+        
+        // --- LOGIC CHẾ ĐỘ SÁNG/TỐI ---
+
+        function applyTheme(isDark) {
+            const htmlElement = document.documentElement;
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            
+            if (isDark) {
+                htmlElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                if (darkModeToggle) darkModeToggle.checked = true;
+            } else {
+                htmlElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                if (darkModeToggle) darkModeToggle.checked = false;
+            }
+            
+            // Re-render chart to apply theme changes to chart canvas
+            if (window.ALL_CACHED_DATA.length > 0) {
+                 const dataToDisplay = filterDataForDays(window.currentDays);
+                 renderChart(dataToDisplay, window.currentDays);
+            }
         }
 
-        // Dữ liệu mua vào và bán ra 30 ngày
-        const dates = [];
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            dates.push(`${date.getDate()}/${date.getMonth() + 1}`);
+        function toggleDarkMode() {
+            const htmlElement = document.documentElement;
+            const isDark = htmlElement.classList.contains('dark');
+            applyTheme(!isDark);
         }
 
-        const muaVaoData = generateRandomData(119000, 3000);
-        const banRaData = generateRandomData(121000, 3000);
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-        // Vẽ biểu đồ
-        const ctx = document.getElementById('goldChart').getContext('2d');
-        const goldChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                applyTheme(true);
+            } else {
+                applyTheme(false);
+            }
+        }
+
+        // --- Hàm Tiện Ích ---
+
+        function formatVND(amount) {
+            return parseFloat(amount).toLocaleString('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+
+        function parseAndFormatDate(dateString, format = 'display') {
+            const date = new Date(dateString);
+            if (format === 'display') {
+                return date.toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric' 
+                });
+            }
+            if (format === 'YYYY-MM-DD') {
+                return date.toISOString().split('T')[0];
+            }
+            return date; // Trả về đối tượng Date
+        }
+        
+        function compareByDateTime(a, b) {
+            return new Date(a.DateTime) - new Date(b.DateTime);
+        }
+        
+        function filterDataForDays(daysToDisplay) {
+            const fullData = window.ALL_CACHED_DATA;
+            if (fullData.length === 0) return [];
+            
+            const endDate = new Date(fullData[fullData.length - 1].DateTime);
+            const startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - (daysToDisplay - 1));
+
+            return fullData.filter(item => {
+                const itemDate = parseAndFormatDate(item.DateTime, 'object');
+                return itemDate >= startDate;
+            });
+        }
+
+        // --- HÀM XỬ LÝ TRẠNG THÁI NÚT ---
+        function updateButtonState(activeId) {
+            document.getElementById('7-days-btn').textContent = "7 Ngày";
+            document.getElementById('30-days-btn').textContent = "1 Tháng";
+            document.getElementById('90-days-btn').textContent = "3 Tháng";
+            document.getElementById('365-days-btn').textContent = "1 Năm";
+            document.getElementById('1095-days-btn').textContent = "3 Năm";
+            document.getElementById('custom-days-btn').textContent = "Tùy Chỉnh";
+
+            ALL_BUTTON_IDS.forEach(id => {
+                const button = document.getElementById(id);
+                if (!button) return;
+
+                let currentClasses = BASE_BUTTON_CLASSES;
+
+                if (id === activeId) {
+                    currentClasses += ' ' + ACTIVE_CLASSES;
+                } else {
+                    currentClasses += ' ' + INACTIVE_CLASSES;
+                }
+                
+                button.className = currentClasses.trim();
+            });
+        }
+
+        // --- XỬ LÝ CACHE (FIREBASE) ---
+        // (Không thay đổi logic Firebase - chỉ giữ lại các hàm)
+        async function getCache() { /* ... */ }
+        async function setCache(data) { /* ... */ }
+        async function getCache() {
+            if (!window.DB_INSTANCE) return null;
+            try {
+                const docRef = window.doc(window.DB_INSTANCE, CACHE_COLLECTION, CACHE_DOC_ID);
+                const docSnap = await window.getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const today = parseAndFormatDate(new Date(), 'YYYY-MM-DD');
+                    
+                    document.getElementById('cache-status').textContent = `Cache: ${data.fetch_date} (${data.data.length} điểm)`;
+                    
+                    if (data.fetch_date === today) {
+                        document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-green-600 text-white';
+                        return data.data; // Cache tươi mới
+                    } else {
+                        document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-yellow-500 text-gray-800';
+                        return data.data; // Cache cũ, vẫn dùng được
+                    }
+                }
+            } catch (error) {
+                console.error("Lỗi đọc cache Firestore:", error);
+                document.getElementById('cache-status').textContent = 'Lỗi đọc Cache';
+                document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-red-600 text-white';
+                return null;
+            }
+            document.getElementById('cache-status').textContent = 'Chưa có Cache';
+            document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-gray-500 text-white';
+            return null; // Không có cache
+        }
+        
+        async function setCache(data) {
+            if (!window.DB_INSTANCE) return;
+            try {
+                const docRef = window.doc(window.DB_INSTANCE, CACHE_COLLECTION, CACHE_DOC_ID);
+                
+                const today = parseAndFormatDate(new Date(), 'YYYY-MM-DD');
+
+                await window.setDoc(docRef, {
+                    fetch_date: today,
+                    data: data 
+                });
+                
+                document.getElementById('cache-status').textContent = `Cache: ${today} (${data.length} điểm) - Đã cập nhật`;
+                document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-green-600 text-white';
+
+            } catch (error) {
+                console.error("Lỗi ghi cache Firestore:", error);
+            }
+        }
+        // --- HÀM FETCH DỮ LIỆU TỪ API ---
+        async function fetchAPI(days) {
+            const TARGET_API_URL = `${BASE_API_URL}?days=${days}`;
+            
+            let API_URL = TARGET_API_URL;
+            let processProxyResponse = false;
+
+            if (window.USE_CORS_PROXY) {
+                API_URL = CORS_PROXY + encodeURIComponent(TARGET_API_URL);
+                processProxyResponse = true;
+            }
+
+            const HEADERS = { 'Accept': 'application/json, text/plain, */*' };
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(API_URL, { headers: HEADERS });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    if (processProxyResponse) {
+                        const proxyResponse = await response.json();
+                        if (proxyResponse.contents) {
+                            return JSON.parse(proxyResponse.contents);
+                        } else {
+                            throw new Error("Cấu trúc phản hồi từ CORS Proxy không mong muốn.");
+                        }
+                    } else {
+                        return await response.json();
+                    }
+
+                } catch (error) {
+                    if (i === 4) {
+                        throw new Error(`Tải dữ liệu thất bại sau nhiều lần thử lại. Chi tiết lỗi: ${error.message}`);
+                    }
+                    const delay = Math.pow(2, i) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+        
+        // --- XỬ LÝ BIỂU ĐỒ VÀ PHÂN TÍCH ---
+        
+        function updateSummaryForRange(minDateTimestamp, maxDateTimestamp, initialPeriodText = null) {
+            const minDate = new Date(minDateTimestamp);
+            const maxDate = new Date(maxDateTimestamp);
+
+            const filteredData = window.ALL_CACHED_DATA.filter(item => {
+                const itemDate = parseAndFormatDate(item.DateTime, 'object');
+                return itemDate >= minDate && itemDate <= maxDate;
+            });
+            
+            if (filteredData.length < 2) {
+                document.getElementById('change-percent').textContent = "Không đủ DL";
+                document.getElementById('percentage-summary').className = `p-4 md:p-6 rounded-xl text-white mb-6 transition duration-500 bg-gray-500`;
+                document.getElementById('period-text').textContent = "Phạm vi Zoom";
+                document.getElementById('oldest-date').textContent = '-';
+                document.getElementById('oldest-price').textContent = '-';
+                document.getElementById('latest-date').textContent = '-';
+                document.getElementById('latest-price').textContent = '-';
+                document.getElementById('difference-amount').textContent = '-';
+                return;
+            }
+
+            const oldestRecord = filteredData[0];
+            const latestRecord = filteredData[filteredData.length - 1];
+
+            const oldestPrice = oldestRecord.PriceSell;
+            const latestPrice = latestRecord.PriceSell;
+
+            const priceDifference = latestPrice - oldestPrice;
+            const percentageChange = (priceDifference / oldestPrice) * 100;
+
+            const isIncrease = percentageChange >= 0;
+            const sign = isIncrease ? '+' : '';
+            const colorClass = isIncrease ? 'bg-green-600' : 'bg-red-600'; 
+            const differenceText = `${isIncrease ? 'Tăng' : 'Giảm'} ${formatVND(Math.abs(priceDifference))}`;
+
+            const startDateText = parseAndFormatDate(oldestRecord.DateTime);
+            const endDateText = parseAndFormatDate(latestRecord.DateTime);
+            
+            document.getElementById('period-text').textContent = initialPeriodText || `${startDateText} - ${endDateText}`;
+            
+            const summaryEl = document.getElementById('percentage-summary');
+            summaryEl.className = `p-4 md:p-6 rounded-xl text-white mb-6 transition duration-500 ${colorClass}`;
+            document.getElementById('change-percent').textContent = `${sign}${percentageChange.toFixed(2)}%`;
+            
+            document.getElementById('oldest-date').textContent = startDateText;
+            document.getElementById('oldest-price').textContent = formatVND(oldestPrice);
+            
+            document.getElementById('latest-date').textContent = endDateText;
+            document.getElementById('latest-price').textContent = formatVND(latestPrice);
+            
+            document.getElementById('difference-amount').textContent = differenceText;
+        }
+
+        function updateDataTable(data) {
+            const tableBody = document.getElementById('data-table-body');
+            tableBody.innerHTML = ''; 
+            
+            const displayData = [...data].reverse().slice(0, 50);
+
+            displayData.forEach(item => {
+                const row = tableBody.insertRow();
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-600'; // Added dark mode hover
+                
+                row.insertCell().textContent = parseAndFormatDate(item.DateTime);
+                row.insertCell().textContent = formatVND(item.PriceBuy);
+                row.insertCell().textContent = formatVND(item.PriceSell);
+            });
+        }
+        
+        // Custom Tooltip Formatter
+        function customTooltipFormatter(e) {
+            let content = `<strong>${e.entries[0].dataPoint.x.toLocaleDateString('vi-VN')}</strong><hr style="margin: 4px 0;">`;
+            
+            e.entries.forEach(entry => {
+                const color = entry.dataSeries.color;
+                const name = entry.dataSeries.name;
+                const price = formatVND(entry.dataPoint.y);
+                
+                content += `<span style="color: ${color};">•</span> ${name}: <strong>${price}</strong><br>`;
+            });
+            
+            return content;
+        }
+
+        function renderChart(combinedData, days) {
+            const buyPoints = [];
+            const sellPoints = [];
+
+            combinedData.forEach(item => {
+                const date = parseAndFormatDate(item.DateTime, 'object');
+                buyPoints.push({ x: date, y: item.PriceBuy });
+                sellPoints.push({ x: date, y: item.PriceSell });
+            });
+            
+            const isDark = document.documentElement.classList.contains('dark');
+            const chartTheme = isDark ? "dark2" : "light2";
+            const chartFontColor = isDark ? "#e5e7eb" : "#1f2937";
+            const chartBackgroundColor = isDark ? "#262626" : "#ffffff";
+            
+            const chart = new CanvasJS.Chart("chartContainer", {
+                animationEnabled: true,
+                theme: chartTheme,
+                backgroundColor: chartBackgroundColor,
+                zoomEnabled: true, 
+                panEnabled: true, 
+                title:{
+                    text: `Biến Động Giá Vàng SJC (${days} Ngày)`,
+                    fontSize: 16, 
+                    fontFamily: "ui-monospace",
+                    fontColor: chartFontColor
+                },
+                axisX:{
+                    valueFormatString: "DD MMM YYYY",
+                    labelFontFamily: "ui-monospace",
+                    labelFontSize: 10,
+                    labelFontColor: chartFontColor,
+                    lineColor: isDark ? "#4b5563" : "#d1d5db",
+                    gridColor: isDark ? "#374151" : "#e5e7eb",
+                    tickColor: chartFontColor
+                },
+                axisY: {
+                    title: "Giá VND/Lượng",
+                    prefix: "VND ",
+                    includeZero: false,
+                    labelFormatter: function (e) {
+                        if (e.value >= 1000000) {
+                            return (e.value / 1000000).toFixed(0) + " Tr";
+                        }
+                        return formatVND(e.value);
+                    },
+                    labelFontFamily: "ui-monospace",
+                    labelFontSize: 10,
+                    labelFontColor: chartFontColor,
+                    lineColor: isDark ? "#4b5563" : "#d1d5db",
+                    gridColor: isDark ? "#374151" : "#e5e7eb",
+                    titleFontColor: chartFontColor,
+                    tickColor: chartFontColor
+                },
+                toolTip: {
+                    shared: true, 
+                    contentFormatter: customTooltipFormatter,
+                    fontFamily: "ui-monospace"
+                },
+                legend: {
+                    fontFamily: "ui-monospace",
+                    fontColor: chartFontColor
+                },
+                rangeChanged: function(e) {
+                    const minDate = e.axisX[0].viewportMinimum;
+                    const maxDate = e.axisX[0].viewportMaximum;
+                    updateSummaryForRange(minDate, maxDate);
+                },
+                data: [
                     {
-                        label: 'Mua vào',
-                        data: muaVaoData,
-                        borderColor: 'rgb(54, 162, 235)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        fill: true
+                        type: "line",
+                        name: "Giá Mua Vào",
+                        showInLegend: true,
+                        markerType: "none", 
+                        color: "#2563eb", // Blue
+                        yValueFormatString: "VND #,##0",
+                        dataPoints: buyPoints
                     },
                     {
-                        label: 'Bán ra',
-                        data: banRaData,
-                        borderColor: 'rgb(255, 99, 132)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        fill: true
+                        type: "line",
+                        name: "Giá Bán Ra",
+                        showInLegend: true,
+                        markerType: "none", 
+                        color: "#f97316", // Orange
+                        yValueFormatString: "VND #,##0",
+                        dataPoints: sellPoints
                     }
                 ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('vi-VN') + 'đ';
+            });
+
+            chart.render();
+        }
+
+        // --- Hàm Xử Lý Chính (Sử dụng Cache) ---
+
+        window.fetchAndAnalyzeGoldPrice = async function(daysToDisplay) {
+            window.currentDays = daysToDisplay; 
+            
+            let activeId = '';
+            const customInput = document.getElementById('custom-days-input');
+            const customDaysValue = parseInt(customInput.value);
+
+            if (ALL_BUTTON_IDS.includes(`${daysToDisplay}-days-btn`)) {
+                 activeId = `${daysToDisplay}-days-btn`;
+            } else if (daysToDisplay === customDaysValue) {
+                 activeId = 'custom-days-btn';
+            }
+            updateButtonState(activeId); 
+
+            const loadingState = document.getElementById('loading-state');
+            const errorState = document.getElementById('error-state');
+            const resultsContainer = document.getElementById('results-container');
+            const errorMessage = document.getElementById('error-message');
+
+            loadingState.classList.remove('hidden');
+            errorState.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            document.getElementById('chartContainer').innerHTML = '';
+
+            try {
+                let fullData;
+                let isCacheFresh = false;
+                
+                if (window.DB_INSTANCE) {
+                    const cachedData = await getCache();
+                    if (cachedData && cachedData.length > 0) {
+                        fullData = cachedData;
+                        const today = parseAndFormatDate(new Date(), 'YYYY-MM-DD');
+                        const cacheStatusText = document.getElementById('cache-status').textContent;
+                        let cacheDate = null;
+
+                        if (cacheStatusText.startsWith('Cache:')) {
+                            const parts = cacheStatusText.split(' ');
+                            if(parts.length > 1) {
+                                const cacheDateText = parts[1];
+                                try {
+                                    const dateMatch = cacheDateText.match(/\d{2}\/\d{2}\/\d{4}/);
+                                    if(dateMatch) {
+                                        const [day, month, year] = dateMatch[0].split('/');
+                                        cacheDate = `${year}-${month}-${day}`;
+                                    }
+                                } catch (e) { console.error("Lỗi parse ngày cache", e); }
                             }
                         }
+                        
+                        if (cacheDate === today) {
+                            isCacheFresh = true;
+                        }
+                        console.log("Sử dụng dữ liệu từ Cache Firestore.");
                     }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        ticks: {
-                            callback: function(value) {
-                                return value.toLocaleString('vi-VN') + 'đ';
-                            }
+                }
+
+                if (!isCacheFresh) {
+                    try {
+                        console.log(`Cache cũ hoặc trống. Gọi API ${DAYS_FOR_CACHE} ngày...`);
+                        loadingState.querySelector('div').innerHTML = `<svg class="animate-spin h-6 w-6 mr-3 inline-block text-gray-900 dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Đang tải dữ liệu ${DAYS_FOR_CACHE} ngày từ API...`;
+                        
+                        const rawData = await fetchAPI(DAYS_FOR_CACHE);
+                        
+                        if (!rawData || rawData.Dates.length < 2) {
+                            throw new Error("API trả về dữ liệu không hợp lệ.");
+                        }
+
+                        const combinedData = [];
+                        for (let i = 0; i < rawData.Dates.length; i++) {
+                            combinedData.push({
+                                DateTime: rawData.Dates[i], 
+                                PriceBuy: parseFloat(rawData.LastBuyPrices[i]),
+                                PriceSell: parseFloat(rawData.LastSellPrices[i])
+                            });
+                        }
+                        fullData = combinedData.sort(compareByDateTime);
+                        
+                        if (window.DB_INSTANCE) {
+                            await setCache(fullData);
+                        } else {
+                            document.getElementById('cache-status').textContent = 'Cache NG: Vô hiệu hóa';
+                            document.getElementById('cache-status').className = 'text-xs font-medium px-3 py-1 rounded-full bg-red-600 text-white';
+                        }
+
+
+                    } catch (apiError) {
+                        console.error('Lỗi API. Thử dùng lại dữ liệu Cache cũ nhất.', apiError);
+                        if (fullData) {
+                            document.getElementById('cache-status').textContent += ' (API Lỗi, Dùng Cache Cũ)';
+                        } else {
+                            throw new Error(`API lỗi và không có dữ liệu Cache dự phòng nào. Chi tiết lỗi: ${apiError.message}`);
                         }
                     }
                 }
+
+                window.ALL_CACHED_DATA = fullData; 
+
+                const dataToDisplay = filterDataForDays(daysToDisplay);
+                
+                if (dataToDisplay.length === 0) {
+                     throw new Error(`Không tìm thấy dữ liệu trong ${daysToDisplay} ngày gần nhất từ Cache 3 Năm.`);
+                }
+
+                resultsContainer.classList.remove('hidden');
+                updateDataTable(fullData); 
+                renderChart(dataToDisplay, daysToDisplay);
+
+                const oldestDateTimestamp = parseAndFormatDate(dataToDisplay[0].DateTime, 'object').getTime();
+                const latestDateTimestamp = parseAndFormatDate(dataToDisplay[dataToDisplay.length - 1].DateTime, 'object').getTime();
+                
+                updateSummaryForRange(oldestDateTimestamp, latestDateTimestamp, `${daysToDisplay} Ngày`); 
+
+            } catch (error) {
+                console.error('Lỗi Phân Tích Tổng Thể: ', error);
+                errorMessage.textContent = error.message; 
+                errorState.classList.remove('hidden');
+            } finally {
+                loadingState.classList.add('hidden');
             }
-        });
+        }
+        
+        // --- Xử lý sự kiện ---
+        function setupEventListeners() {
+            const rangeButtons = document.querySelectorAll('.time-range-btn');
+            const customDaysBtn = document.getElementById('custom-days-btn');
+            const customDaysInput = document.getElementById('custom-days-input');
+            const proxyToggle = document.getElementById('proxy-toggle');
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+
+            rangeButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const days = parseInt(e.currentTarget.dataset.days);
+                    if (days) {
+                         window.fetchAndAnalyzeGoldPrice(days);
+                    }
+                });
+            });
+
+            customDaysBtn.addEventListener('click', () => {
+                const days = parseInt(customDaysInput.value);
+                if (days > 1 && days <= 1095) {
+                    window.fetchAndAnalyzeGoldPrice(days);
+                } else {
+                    console.error('Vui lòng nhập số ngày hợp lệ (tối thiểu 2, tối đa 1095 - 3 năm)');
+                }
+            });
+
+            proxyToggle.addEventListener('change', () => {
+                window.USE_CORS_PROXY = proxyToggle.checked;
+                window.fetchAndAnalyzeGoldPrice(window.currentDays);
+            });
+
+            darkModeToggle.addEventListener('change', toggleDarkMode);
+            
+            updateButtonState('7-days-btn'); 
+        }
+
+        // --- Khởi chạy Ứng dụng ---
+        window.onload = () => {
+            initializeTheme(); // Khởi tạo chế độ Sáng/Tối
+            setupEventListeners();
+            if (typeof window.setupFirebaseAndStartApp === 'function') {
+                window.setupFirebaseAndStartApp();
+            } else {
+                 console.error("Firebase setup function not found. Running with limited functionality.");
+                 window.DB_INSTANCE = null;
+                 window.fetchAndAnalyzeGoldPrice(window.currentDays);
+            }
+        };
     </script>
 </body>
 </html>
